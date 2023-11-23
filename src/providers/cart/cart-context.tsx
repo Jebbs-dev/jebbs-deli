@@ -1,4 +1,3 @@
-import { StaticImageData } from "next/image";
 import React, { MouseEventHandler } from "react";
 
 export interface CartItem {
@@ -7,7 +6,7 @@ export interface CartItem {
   quantity: number;
   category: string;
   price: number;
-  image: StaticImageData;
+  image: string;
 };
 
 export interface CartItem {

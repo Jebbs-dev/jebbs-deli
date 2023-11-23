@@ -1,0 +1,75 @@
+export interface IMeals {
+  id: number,
+  name: string,
+  price: number,
+  description: string,
+  image: string,
+  category: string
+}
+
+export const Meals: IMeals[] = [
+  {
+    id: 1,
+    name: "Chinese Noodles Pasta",
+    price: 20.0,
+    description: "wonderful chinese flavouring",
+    image: "/images/Chinese-Noodles-Pasta.png",
+    category: "Meal",
+  },
+  {
+    id: 2,
+    name: "Vegetable Chowmien",
+    price: 17.99,
+    description: "tasty veggies a la pasta italiano",
+    image: "/images/Vegetable-Chowmien.png",
+    category: "Meal",
+  },
+  {
+    id: 3,
+    name: "Pasta al pomoddoro",
+    price: 14.5,
+    description: "blah blah blah...",
+    image: "/images/Pasta-al-pomoddoro.png",
+    category: "Meal",
+  },
+  {
+    id: 4,
+    name: "Rice and Curry",
+    price: 12.25,
+    description: "more bollocks...",
+    image: "/images/Rice-and-Curry.png",
+    category: "Meal",
+  },
+  {
+    id: 5,
+    name: "Chinese Nood Past",
+    price: 22.0,
+    description: "wonderful chinese flavouring",
+    image: "/images/Chinese-Noodles-Pasta.png",
+    category: "Meal",
+  },
+  {
+    id: 6,
+    name: "Veggie Chow",
+    price: 16.99,
+    description: "tasty veggies a la pasta italiano",
+    image: "/images/Vegetable-Chowmien.png",
+    category: "Meal",
+  },
+  {
+    id: 7,
+    name: "Pasta al doro",
+    price: 16.5,
+    description: "blah blah blah...",
+    image: "/images/Pasta-al-pomoddoro.png",
+    category: "Meal",
+  },
+  {
+    id: 8,
+    name: "Rice n' Curry",
+    price: 14.25,
+    description: "more bollocks...",
+    image: "/images/Rice-and-Curry.png",
+    category: "Meal",
+  },
+];

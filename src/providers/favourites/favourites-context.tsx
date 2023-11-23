@@ -7,7 +7,7 @@ export interface FaveItem {
   category: string;
   price: number;
   description: string;
-  image: StaticImageData;
+  image: string;
 };
 
 export interface FaveItem {

@@ -2,13 +2,13 @@ import React from "react";
 import Image from "next/image";
 import { widgets } from "./data/widgets";
 
-const CtaSection = () => {
+export const CtaSection = () => {
   return (
     <div className=" w-full">
       <div className="grid int:h-[100vh] max-w-[90vw] mx-auto">
         <div className="grid md:auto-cols-fr gap-5 items-center md:grid-cols-2">
           <div className="">
-            <Image src="/images/HeroImage.png" alt="Woman eating fruits" />
+            <img src="/images/HeroImage.png" alt="Woman eating fruits" />
           </div>
           <div className="flex flex-col p-5">
             <h1 className="font-bold text-4xl md:text-5xl leading-10 md:leading-[65px] text-hair font-sans py-3">
@@ -26,7 +26,7 @@ const CtaSection = () => {
                       className="rounded-full bg-rose-100 w-10 h-10 flex items-center justify-around"
                       style={{ backgroundColor: widget.color }}
                     >
-                      <Image src={widget.image} alt="" className="w-6 h-6" />{" "}
+                      <Image src={widget.image} height={24} width={24} alt="" />{" "}
                     </span>
                     <p className="ml-2 font-semibold">{widget.title}</p>
                   </div>
@@ -48,4 +48,3 @@ const CtaSection = () => {
   );
 };
 
-export default CtaSection;

@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import CartProvider from "@/providers/cart/cart-provider";
 import FaveProvider from "@/providers/favourites/favourites-provider";
+import { Navbar } from "@/components/header/header";
+import Footer from "@/components/footer/footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +22,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <CartProvider>
-          <FaveProvider>{children}</FaveProvider>
+          <FaveProvider>
+            <Navbar/>
+            {children}
+            <Footer/>
+            </FaveProvider>
         </CartProvider>
       </body>
     </html>
