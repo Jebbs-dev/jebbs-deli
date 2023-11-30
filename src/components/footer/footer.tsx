@@ -8,7 +8,7 @@ import {
   FaFacebookF,
 } from "react-icons/fa6";
 
-const Footer = () => {
+export const Footer = () => {
   return (
     <>
       <footer className="bg-orange-50 p-10">
@@ -128,4 +128,3 @@ const Footer = () => {
   );
 };
 
-export default Footer;
