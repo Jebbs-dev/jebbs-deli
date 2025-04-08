@@ -2,11 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { foot_wigs } from "./data/widgets";
 
-import {
-  FaTwitter,
-  FaInstagram,
-  FaFacebookF,
-} from "react-icons/fa6";
+import { FaTwitter, FaInstagram, FaFacebookF } from "react-icons/fa6";
 
 export const Footer = () => {
   return (
@@ -15,7 +11,13 @@ export const Footer = () => {
         <div className=" max-w-[90vw] mx-auto grid int:grid-cols-footer gap-5 int:gap-2 md:grid-cols-3 md:gap-10 ">
           <div className="">
             <a href="/" className="flex items-center mb-4">
-              <Image src="/images/img-bg-logo.png" width={40} height={40} alt="deliLogo" className="mr-2" />
+              <Image
+                src="/images/img-bg-logo.png"
+                width={40}
+                height={40}
+                alt="deliLogo"
+                className="mr-2"
+              />
               <span className="font-semibold text-slate-900 text-lg">
                 Jebbs Deli
               </span>
@@ -33,13 +35,15 @@ export const Footer = () => {
                 <FaTwitter className="align-middle" />
               </div>
               <div className="flex rounded-full h-8 w-8 items-center justify-around bg-orange-400 text-white">
-                <FaInstagram  />
+                <FaInstagram />
               </div>
             </div>
           </div>
 
           <div className="">
-            <h3 className="text-[18px] text-hair font-semibold mb-7">Quick Links</h3>
+            <h3 className="text-[18px] text-hair font-semibold mb-7">
+              Quick Links
+            </h3>
             <div className="flex flex-col justify-around text-black opacity-40 space-y-2">
               <a href="/">
                 <span>Popular dishes</span>
@@ -57,7 +61,9 @@ export const Footer = () => {
           </div>
 
           <div className="">
-            <h3 className="text-[18px] font-semibold mb-7 text-hair">About Us</h3>
+            <h3 className="text-[18px] font-semibold mb-7 text-hair">
+              About Us
+            </h3>
             <div className="flex flex-col justify-around text-black opacity-40  space-y-2">
               <a href="/" className="">
                 <span>Terms and condtions</span>
@@ -75,25 +81,23 @@ export const Footer = () => {
           </div>
 
           <div className="">
-            <h3 className="text-[18px] font-semibold mb-7 text-hair">Get in Touch</h3>
+            <h3 className="text-[18px] font-semibold mb-7 text-hair">
+              Get in Touch
+            </h3>
 
             {foot_wigs.map((foot) => {
               return (
-                <>
-                  <div
-                    className="flex items-center space-x-2 mb-2 text-black opacity-40"
-                    key={foot.id}
-                  >
-                    <div className="shrink-0 text-white stroke-orange-400">
-                      <foot.icon
-                        style={{ color: "#f2994a" }}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-black">{foot.text}</p>
-                    </div>
+                <div
+                  className="flex items-center space-x-2 mb-2 text-black opacity-40"
+                  key={foot.id}
+                >
+                  <div className="shrink-0 text-white stroke-orange-400">
+                    <foot.icon style={{ color: "#f2994a" }} />
                   </div>
-                </>
+                  <div>
+                    <p className="text-black">{foot.text}</p>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -127,4 +131,3 @@ export const Footer = () => {
     </>
   );
 };
-
