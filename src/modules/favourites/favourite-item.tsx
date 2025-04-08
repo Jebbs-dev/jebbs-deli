@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export const FaveItems = (props: FaveItem) => {
   const price = props.price;
-  console.log(price);
+
   return (
     <>
       <div
@@ -14,6 +14,8 @@ export const FaveItems = (props: FaveItem) => {
         <Image
           src={props.image}
           alt=""
+          width={100}
+          height={100}
           className="w-[150px] h-[150px] mx-auto mb-2"
         />
         <h3 className="text-[20px] font-semibold">{props.name}</h3>
