@@ -3,6 +3,7 @@ import { mealTypes } from "./menu";
 import Image from "next/image";
 
 export const MealItem = (props: mealTypes) => {
+
   return (
     <>
       <div
