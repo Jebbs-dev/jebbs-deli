@@ -117,7 +117,7 @@ export const Menu = () => {
   return (
     <>
       <div className="w-full bg-orange-50" id="menu">
-        <div className="max-w-[90vw] mx-auto pt-20 overflow-hidden">
+        <div className="max-w-[90vw] mx-auto pt-20 pb-60 overflow-hidden">
           <div className="flex flex-col justify-between">
             <h2 className="text-4xl font-bold mb-5 ">Full Menu</h2>
             <div className="flex flex-row  md:flex-row ">
