@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {Signin} from "@/components/form/signin";
+import { Signin } from "@/modules/auth/components/forms/signin";
 
 import {
   FaMagnifyingGlass,
@@ -17,10 +17,10 @@ import {
   FaHeart,
   FaBars,
 } from "react-icons/fa6";
-import {Signup} from "@/components/form/signup";
+import { Signup } from "@/modules/auth/components/forms/signup";
 import CartContext from "@/providers/cart/cart-context";
-import {Cart} from "@/components/cart/cart";
-
+import { Cart } from "@/components/cart/cart";
+import { useRouter } from "next/navigation";
 
 interface navProps {
   setToggleCheck: Dispatch<SetStateAction<boolean>>;
@@ -31,10 +31,9 @@ export const Navbar = () => {
   const [inputShow, setInputShow] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
 
-  const [showSignin, setShowSignin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
-
   const [faves, setFaves] = useState(false);
+
+  const router = useRouter();
 
   const [openCart, setOpenCart] = useState(false);
 
@@ -43,21 +42,15 @@ export const Navbar = () => {
     return currNumber + item.quantity;
   }, 0);
 
-  const toggleModal = () => {
-    setShowSignin(true);
-    setIsOpen(!isOpen);
-  };
-
-  const register = (event: { preventDefault: () => void }) => {
-    event.preventDefault();
-    setShowSignup(true);
-    setShowSignin(false);
-  };
 
   const toggleCart = () => {
     setOpenCart((prevOpenCart) => !prevOpenCart);
     setIsOpen(!isOpen);
   };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [router.push]);
 
   const toggleFaves = () => {
     setFaves(true);
@@ -198,15 +191,16 @@ export const Navbar = () => {
                   </button>
                 </li>
                 <li>
-                  <button
-                    onClick={toggleModal}
-                    type="button"
-                    data-modal-target="defaultModal"
-                    data-modal-toggle="defaultModal"
-                    className="block w-full text-white  rounded-md bg-orange-400 hover:bg-browned focus:ring-4 focus:outline-none font-medium text-sm px-4 py-3 text-center"
-                  >
-                    Get started
-                  </button>
+                  <Link href="/auth">
+                    <button
+                      type="button"
+                      data-modal-target="defaultModal"
+                      data-modal-toggle="defaultModal"
+                      className="block w-full text-white  rounded-md bg-orange-400 hover:bg-browned focus:ring-4 focus:outline-none font-medium text-sm px-4 py-3 text-center"
+                    >
+                      Get started
+                    </button>
+                  </Link>
                 </li>
               </div>
             </ul>
@@ -246,9 +240,9 @@ export const Navbar = () => {
                   className="w-4 h-4 opacity-25 "
                   style={{ color: "#FB923C" }}
                 />
-            <span className="text-red-600 absolute top-[18px] right-[280px] z-[999]">
-              {itemsAlert}
-            </span>
+                <span className="text-red-600 absolute top-[18px] right-[280px] z-[999]">
+                  {itemsAlert}
+                </span>
               </Link>
             </button>
             <button
@@ -263,38 +257,20 @@ export const Navbar = () => {
               </Link>
             </button>
 
-            <button
-              onClick={toggleModal}
-              type="button"
-              data-modal-target="defaultModal"
-              data-modal-toggle="defaultModal"
-              className="block text-white rounded-md bg-orange-400 hover:bg-browned  focus:outline-orange-400 focus:ring-1 font-medium text-sm px-4 py-3 text-center"
-            >
-              Get started
-            </button>
+            <Link href="/auth">
+              <button
+                type="button"
+                data-modal-target="defaultModal"
+                data-modal-toggle="defaultModal"
+                className="block text-white rounded-md bg-orange-400 hover:bg-browned  focus:outline-orange-400 focus:ring-1 font-medium text-sm px-4 py-3 text-center"
+              >
+                Get started
+              </button>
+            </Link>
           </div>
         </div>
       </nav>
-      {showSignup ? (
-        <Signup
-          showSignup={showSignup}
-          closeModal={() => {
-            setShowSignup(false);
-          }}
-        />
-      ) : null}
-      {showSignin ? (
-        <Signin
-          showSignin={showSignin}
-          register={register}
-          closeModal={() => {
-            setShowSignin(false);
-          }}
-        />
-      ) : null}
-      {openCart ? (
-        <Cart openCart={openCart} />
-      ) : null}
+      {openCart ? <Cart openCart={openCart} /> : null}
     </>
   );
 };
