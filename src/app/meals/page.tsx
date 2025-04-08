@@ -3,6 +3,7 @@
 import React, { SetStateAction, useContext, useState } from "react";
 import { MealItem } from "@/modules/landing/menu/meal-item";
 import CartContext from "@/providers/cart/cart-context";
+import { mealTypes } from "@/modules/landing/menu/menu";
 // import { mealTypes } from "../../../../data/dataloader";
 // import Paginate from "./Paginate";
 
@@ -35,10 +36,13 @@ const Meals = ({ meals }: mealProps) => {
     dessert: 1,
   };
 
+
   const [currentCategoryPage, setCurrentCategoryPage] =
     useState<categoryPages>(pages);
 
   const [mealsPerPage] = useState(8);
+
+  
 
   const categories: MealCategories = {
     snack: allMeals.filter((meal) => meal.category === "snack"),
@@ -158,7 +162,7 @@ const Meals = ({ meals }: mealProps) => {
           </div>
           <div className="max-w-[90vw] py-6 grid grid-cols-1 md:grid-cols-4 auto-cols-auto gap-5 justify-between ">
             {currentMeals.map((meal: mealTypes) => (
-              <MealLists
+              <MealItem
                 key={meal.id}
                 name={meal.name}
                 image={meal.image}
