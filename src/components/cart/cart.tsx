@@ -1,20 +1,21 @@
 "use client";
 
-import { Fragment, useContext, useState } from "react";
+import { Fragment, useContext, useEffect, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import CartContext, { CartItem } from "@/providers/cart/cart-context";
-import {CartItems} from "./cart-item";
+import { CartItems } from "./cart-item";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
 interface CartProps {
-  openCart: boolean,
+  openCart: boolean;
 }
 
-export const Cart = ({openCart}: CartProps) => {
+export const Cart = ({ openCart }: CartProps) => {
   const [open, setOpen] = useState(openCart);
-  const [toggleCheck, setToggleCheck] = useState(false)
+  const [toggleCheck, setToggleCheck] = useState(false);
 
   // const [isSubmitting, setIsSubmitting] = useState(false);
   // const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -22,11 +23,23 @@ export const Cart = ({openCart}: CartProps) => {
   const totalAmount = cartCtx.totalAmount;
   // const hasItems = cartCtx.items.length > 0;
 
+  useEffect(() => {
+    if (window.location.hash === "#cart") {
+      setOpen(true);
+    }
+  }, []);
+
+  console.log(window.location.hash);
+
   console.log(cartCtx.items);
+  // localStorage.setItem("cartItem", JSON.stringify(cartCtx.items));
 
-
+  // const storedCartItems = JSON.parse(localStorage.getItem("cartItem"));
+  // console.log(storedCartItems);
+  
   const cartItemRemoveHandler = (id: string | number) => {
     cartCtx.removeItem(id);
+
   };
 
   const cartItemAddHandler = (item: CartItem) => {
@@ -34,7 +47,7 @@ export const Cart = ({openCart}: CartProps) => {
   };
 
   const checkoutHandler = () => {
-    setToggleCheck(true)
+    setToggleCheck(true);
     setOpen(!open);
   };
 
@@ -79,7 +92,10 @@ export const Cart = ({openCart}: CartProps) => {
                           <button
                             type="button"
                             className="relative -m-2 p-2 text-gray-400 hover:text-gray-500"
-                            onClick={() => setOpen(false)}
+                            onClick={() => {
+                              setOpen(false);
+                              location.href = "/";
+                            }}
                           >
                             <span className="absolute -inset-0.5" />
                             <span className="sr-only">Close panel</span>
@@ -103,7 +119,9 @@ export const Cart = ({openCart}: CartProps) => {
                                   null,
                                   item.id
                                 )}
-                                onAdd={cartItemAddHandler.bind(null, item)} id={item.id}                              />
+                                onAdd={cartItemAddHandler.bind(null, item)}
+                                id={item.id}
+                              />
                             ))}
                           </ul>
                         </div>
@@ -119,7 +137,7 @@ export const Cart = ({openCart}: CartProps) => {
                         Shipping and taxes calculated at checkout.
                       </p>
                       <div className="mt-6">
-                         <Link
+                        <Link
                           href="/checkout"
                           className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-orange-600"
                           onClick={checkoutHandler}
@@ -151,4 +169,3 @@ export const Cart = ({openCart}: CartProps) => {
     </Transition.Root>
   );
 };
-
