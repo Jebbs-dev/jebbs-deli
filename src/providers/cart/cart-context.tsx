@@ -7,12 +7,9 @@ export interface CartItem {
   category: string;
   price: number;
   image: string;
-};
-
-export interface CartItem {
   onRemove?: MouseEventHandler<HTMLButtonElement>;
   onAdd?: MouseEventHandler<HTMLButtonElement>;
-}
+};
 
 type CartContextType = {
   items: CartItem[];
