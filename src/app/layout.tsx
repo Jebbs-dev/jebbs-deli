@@ -1,12 +1,13 @@
-import "../styles/globals.css";
+import "./globals.css";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import CartProvider from "@/providers/cart/cart-provider";
 import FaveProvider from "@/providers/favourites/favourites-provider";
-import { Navbar } from "@/components/header/header";
-import { Footer } from "@/components/footer/footer";
 
-const inter = Inter({ subsets: ["latin"] });
+import PathnameProvider from "@/providers/pathname-provider";
+import { QueryProvider } from "@/providers/query-client-provider";
+
+// const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,16 +20,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <CartProvider>
-          <FaveProvider>
-            <Navbar />
-            {children}
-            <Footer />
-          </FaveProvider>
-        </CartProvider>
-      </body>
-    </html>
+    <QueryProvider>
+      <html lang="en">
+        <body className={GeistSans.className}>
+          <CartProvider>
+            <FaveProvider>
+              <PathnameProvider>{children}</PathnameProvider>
+            </FaveProvider>
+          </CartProvider>
+        </body>
+      </html>
+    </QueryProvider>
   );
 }
