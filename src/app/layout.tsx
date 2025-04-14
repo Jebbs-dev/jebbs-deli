@@ -6,6 +6,7 @@ import FaveProvider from "@/providers/favourites/favourites-provider";
 
 import PathnameProvider from "@/providers/pathname-provider";
 import { QueryProvider } from "@/providers/query-client-provider";
+import TokenRefreshProvider from "@/providers/token-refresh-provider";
 
 // const inter = Inter({ subsets: ["latin"] });
 
@@ -25,7 +26,9 @@ export default function RootLayout({
         <body className={GeistSans.className}>
           <CartProvider>
             <FaveProvider>
-              <PathnameProvider>{children}</PathnameProvider>
+              <PathnameProvider>
+                <TokenRefreshProvider>{children}</TokenRefreshProvider>
+              </PathnameProvider>
             </FaveProvider>
           </CartProvider>
         </body>
