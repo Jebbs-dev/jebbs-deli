@@ -194,7 +194,7 @@ const useCartStore = create<CartStore>()(
       // },
 
       clearVendorItems: (vendorId: string) => set((state) => {
-        const updatedItems = state.items.filter(item => item.vendor?.id !== vendorId);
+        const updatedItems = state.items.filter(item => item.store?.id !== vendorId);
         return {
           items: updatedItems,
           totalAmount: calculateTotalAmount(updatedItems),
