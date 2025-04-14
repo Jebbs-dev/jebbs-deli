@@ -1,5 +1,60 @@
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
+// Helper function to check if token is about to expire
+const isTokenExpiringSoon = (token: string, thresholdMinutes = 30): boolean => {
+  try {
+    const decoded: any = jwtDecode(token);
+    if (!decoded.exp) return false;
+    
+    // Calculate when the token will expire (in milliseconds)
+    const expirationTime = decoded.exp * 1000;
+    const currentTime = Date.now();
+    const timeUntilExpiration = expirationTime - currentTime;
+    
+    // Convert threshold to milliseconds
+    const thresholdMs = thresholdMinutes * 60 * 1000;
+    
+    // Return true if token will expire within the threshold time
+    return timeUntilExpiration <= thresholdMs;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return false;
+  }
+};
+
+// Function to refresh the token
+const refreshAuthToken = async () => {
+  try {
+    let userInfo: any = {};
+    if (localStorage.getItem("userInfo")) {
+      userInfo = JSON.parse(localStorage.getItem("userInfo")!);
+    }
+    
+    if (!userInfo?.refreshToken) {
+      throw new Error("No refresh token available");
+    }
+
+    const refreshResponse = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api"}/auth/refresh`,
+      { refreshToken: userInfo.refreshToken }
+    );
+
+    const { accessToken, refreshToken } = refreshResponse.data;
+
+    // Update the tokens in localStorage
+    localStorage.setItem(
+      "userInfo",
+      JSON.stringify({ ...userInfo, accessToken, refreshToken })
+    );
+
+    return accessToken;
+  } catch (error) {
+    console.error("Token refresh failed:", error);
+    localStorage.removeItem("userInfo");
+    throw error;
+  }
+};
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api",
@@ -28,7 +83,7 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     let userInfo = null;
     try {
       const userInfoStr = localStorage.getItem("userInfo");
@@ -39,8 +94,27 @@ api.interceptors.request.use(
       console.error("Error parsing userInfo:", error);
     }
 
-    if (userInfo?.access) {
-      config.headers.Authorization = `Bearer ${userInfo.access}`;
+    if (userInfo?.accessToken) {
+      // Check if token is about to expire and refresh it proactively
+      // For API requests, refresh if token expires within 30 minutes
+      if (isTokenExpiringSoon(userInfo.accessToken, 30) && !isRefreshing) {
+        try {
+          isRefreshing = true;
+          const newToken = await refreshAuthToken();
+          config.headers.Authorization = `Bearer ${newToken}`;
+        } catch (error) {
+          console.error("Proactive token refresh failed:", error);
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        config.headers.Authorization = `Bearer ${userInfo.accessToken}`;
+      }
+    }
+
+    // Dynamically set Content-Type based on the request data
+    if (config.data instanceof FormData) {
+      config.headers["Content-Type"] = "multipart/form-data";
     }
 
     return config;
@@ -70,34 +144,17 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        let userInfo: any = {};
-        if (localStorage.getItem("userInfo")) {
-          userInfo = JSON.parse(localStorage.getItem("userInfo")!);
-        }
-
-        const refreshToken = userInfo?.refresh;
-
-        const refreshResponse = await axios.post(
-          `${api.defaults.baseURL}/auth/refresh`,
-          { refreshToken }
-        );
-
-        const { access, refresh } = refreshResponse.data;
-
-        localStorage.setItem(
-          "userInfo",
-          JSON.stringify({ ...userInfo!, access, refresh })
-        );
-
+        // Use the refreshAuthToken function we created
+        const newAccessToken = await refreshAuthToken();
+        
         // Process queued requests with the new token
-        processQueue(null, access);
+        processQueue(null, newAccessToken);
 
         // Retry the failed request with the new token
-        originalRequest.headers.Authorization = `Bearer ${access}`;
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
-
         // Clear tokens and redirect to login
         processQueue(refreshError, null);
         return Promise.reject(refreshError);
@@ -130,3 +187,39 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+/**
+ * Sets up a periodic token refresh check to keep the session alive
+ * Call this function when your application initializes (e.g., in _app.js/app.js)
+ */
+export const setupSilentRefresh = () => {
+  // Check for token refresh need on startup
+  const checkAndRefreshToken = async () => {
+    try {
+      const userInfoStr = localStorage.getItem("userInfo");
+      if (!userInfoStr) return;
+      
+      const userInfo = JSON.parse(userInfoStr);
+      if (!userInfo?.accessToken) return;
+      
+      // If token is going to expire in the next 2 hours, refresh it
+      if (isTokenExpiringSoon(userInfo.accessToken, 120) && !isRefreshing) {
+        console.log("Silent token refresh initiated");
+        await refreshAuthToken();
+      }
+    } catch (error) {
+      console.error("Silent token refresh failed:", error);
+    }
+  };
+
+  // Immediately check if we need to refresh - delay slightly to ensure the browser has fully loaded
+  setTimeout(() => {
+    checkAndRefreshToken();
+  }, 1000);
+  
+  // Set up periodic checking (every 1 hour)
+  const refreshInterval = setInterval(checkAndRefreshToken, 60 * 60 * 1000);
+  
+  // Clean up interval when needed
+  return () => clearInterval(refreshInterval);
+};
