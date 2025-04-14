@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { User } from "@/types/types";
 import { useLoginUser } from "../../mutations/login";
 import { useToast } from "@/hooks/use-toast";
+import { useCreateUser } from "../../mutations/register";
+import { useAuthFormModal } from "@/store/auth-form-modal";
 
 interface AuthFormProps {
   variant: string;
@@ -32,7 +34,9 @@ const loginDefaultValues = {
 
 const AuthForm = ({ variant }: AuthFormProps) => {
   const { mutateAsync: loginUser } = useLoginUser();
+  const { mutateAsync: registerUser } = useCreateUser();
   const { toast } = useToast();
+  const { onAuthFormClose } = useAuthFormModal();
 
   const formSchema = z.object({
     name: z
@@ -66,7 +70,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
   //   console.log(values);
   // }
 
-  const login = async (values: Omit<User, "id" | "name" | "role">) => {
+  const login = async (values: { email: string; password: string }) => {
     try {
       await loginUser(values);
       toast({
@@ -82,10 +86,46 @@ const AuthForm = ({ variant }: AuthFormProps) => {
     }
   };
 
+  const register = async (values: z.infer<typeof formSchema>) => {
+    try {
+      if (!values.name) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Name is required for registration.",
+        });
+        return;
+      }
+
+      await registerUser({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      });
+      toast({
+        title: "Success",
+        description: "User created successfully!",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Something went wrong!",
+      });
+    }
+  };
+
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(login)} className="space-y-4">
+        <form
+          onSubmit={
+            variant === "login"
+              ? form.handleSubmit(login)
+              : form.handleSubmit(register)
+          }
+          className="space-y-4 text-left"
+        >
           {variant === "register" && (
             <FormField
               control={form.control}
@@ -140,6 +180,9 @@ const AuthForm = ({ variant }: AuthFormProps) => {
             type="submit"
             disabled={form.formState.isSubmitting}
             className="bg-primary w-full hover:bg-orange-600 disabled:bg-gray-400"
+            onClick={() => {
+              onAuthFormClose();
+            }}
           >
             Submit
           </Button>
