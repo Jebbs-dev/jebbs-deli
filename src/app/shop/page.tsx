@@ -180,7 +180,7 @@ const Shop = () => {
                           setSelectProduct(product);
                         }}
                       >
-                        {product.name} - {product.vendor?.name}
+                        {product.name} - {product.store?.name}
                       </h4>
                       <p className="text-gray-400 flex flex-row gap-2">
                         <span></span>

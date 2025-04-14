@@ -12,9 +12,12 @@ import Link from "next/link";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDown } from "lucide-react";
 import { useAddToCart } from "@/modules/auth/mutations/add-to-cart";
+import { useAuthFormModal } from "@/store/auth-form-modal";
+import AuthModal from "@/modules/auth/components/auth-modal";
+import { useFetchCart } from "../queries/fetch-cart";
 
 interface CartProps {
   isOpen: boolean;
@@ -31,50 +34,49 @@ const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
     clearVendorItems,
   } = useCartStore();
   const { isLoggedIn, user } = useAuthStore();
+  const { onAuthFormOpen } = useAuthFormModal();
 
   const { mutateAsync: addCart } = useAddToCart();
 
+  const { data: fetchedCartData, isLoading } = useFetchCart(String(user?.id));
+
   const [showProducts, setShowProducts] = useState(false);
 
-  setTimeout(() => {
-    if (isLoggedIn) {
-      const localStorageCart = JSON.parse(
-        localStorage.getItem("jebbs-cart-storage") || "[]"
-      );
-      const payload = {
-        cartItem: localStorageCart && localStorageCart.state.items.map(
-          (
-            item: Omit<
-              Cart,
-              "createdAt" | "updatedAt" | "vendor" | "vendorId" | "id"
-            >
-          ) => ({
-            ...item,
-          })
-        ), // Ensure quantity is set
-        //  // Assuming userInfo contains an id
-      };
-      addCart(payload.cartItem); // Call the addCart function
-      localStorage.removeItem("jebbs-cart-storage"); // Clear local storage cart after moving
-    }
-    // User is signed in, clear the cart from local storage
-  }, 3000);
+  useEffect(() => {
+    setTimeout(() => {
+      if (isLoggedIn) {
+        const localStorageCart = JSON.parse(
+          localStorage.getItem("jebbs-cart-storage") || "[]"
+        );
+        const payload = {
+          cartItems: localStorageCart && localStorageCart?.state?.items,
+          totalPrice: totalAmount,
+          userId: user!.id,
+        };
+        addCart(payload); // Call the addCart function
+        localStorage.removeItem("jebbs-cart-storage"); // Clear local storage cart after moving
+      }
+      // User is signed in, clear the cart from local storage
+    }, 3000);
+  }, [addCart, isLoggedIn, totalAmount, user]);
+
+  // Fetch the products from the fetchedCartData
 
   // Group products by vendor
-  const groupedByVendor = items.reduce((acc, product) => {
-    const vendorId = product.vendor?.id || "unknown";
-    if (!acc[vendorId]) {
-      acc[vendorId] = [];
+  const groupedByVendorStore = items.reduce((acc, product) => {
+    const storeId = product.store?.id || "unknown";
+    if (!acc[storeId]) {
+      acc[storeId] = [];
     }
-    acc[vendorId].push(product);
+    acc[storeId].push(product);
     return acc;
   }, {} as Record<string, CartItemProps[]>);
 
   // Calculate totals for each vendor
-  const vendorTotals = Object.entries(groupedByVendor).map(
-    ([vendorId, products]) => ({
-      vendorId,
-      vendorName: products[0].vendor?.name || "Unknown Vendor",
+  const storeTotals = Object.entries(groupedByVendorStore).map(
+    ([storeId, products]) => ({
+      storeId,
+      vendorStoreName: products[0].store?.name || "Unknown Vendor",
       totalQuantity: products.reduce(
         (sum, product) => sum + product.quantity,
         0
@@ -87,8 +89,16 @@ const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
     })
   );
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  console.log(fetchedCartData);
+  console.log(items);
+
   return (
     <>
+      <AuthModal />
       <Sheet
         open={isOpen}
         onOpenChange={() => {
@@ -102,15 +112,15 @@ const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
 
           <div className="flex flex-col justify-between h-full mb-3">
             <div className="overflow-auto">
-              {vendorTotals.map((vendor) => (
+              {storeTotals.map((store) => (
                 <div
-                  key={vendor.vendorId}
+                  key={store.storeId}
                   className="mb-6 border border-gray-200 p-6 rounded-xl"
                 >
                   <div className="flex flex-col items-start gap-2 mb-2 bg-orange-50 p-2 rounded-md">
                     <div className="flex flex-row justify-between w-full">
                       <h3 className="font-medium text-orange-700">
-                        {vendor.vendorName}
+                        {store.vendorStoreName}
                       </h3>
 
                       <p
@@ -125,18 +135,18 @@ const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
                       <span className="text-sm text-orange-600">
                         ₦
                         {formatNumberWithCommas(
-                          Number(vendor.totalAmount.toFixed(2))
+                          Number(store.totalAmount.toFixed(2))
                         )}
                       </span>
                       <span className="text-sm text-orange-600 border-l pl-4 border-orange-200">
-                        {vendor.totalQuantity}{" "}
-                        {vendor.totalQuantity === 1 ? "item" : "items"}
+                        {store.totalQuantity}{" "}
+                        {store.totalQuantity === 1 ? "item" : "items"}
                       </span>
                     </div>
                   </div>
                   {showProducts && (
                     <ul className="divide-y divide-gray-200 transition">
-                      {vendor.products.map((item: CartItemProps) => (
+                      {store.products.map((item: CartItemProps) => (
                         <CartItem
                           key={item.id}
                           items={{
@@ -149,17 +159,27 @@ const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
                     </ul>
                   )}
                   <div className="mt-4 flex flex-col gap-4">
-                    <Link
-                      href={isLoggedIn ? `/checkout` : "/auth"}
-                      className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600"
+                    <Button
+                      asChild
+                      onClick={() => {
+                        if (!isLoggedIn) {
+                          onAuthFormOpen();
+                          console.log("To trigger Authform");
+                        }
+                      }}
                     >
-                      Proceed to checkout
-                    </Link>
+                      <Link
+                        href={isLoggedIn ? `/checkout` : "/shop"}
+                        className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600"
+                      >
+                        Proceed to checkout
+                      </Link>
+                    </Button>
                     <Button
                       className="w-full bg-red-100 px-6 py-3 text-red-500 text-sm hover:bg-red-200"
-                      onClick={() => clearVendorItems(vendor.vendorId)}
+                      onClick={() => clearVendorItems(store.storeId)}
                     >
-                      Clear {vendor.vendorName}'s Items
+                      Clear {store.vendorStoreName}&apos;s Items
                     </Button>
                   </div>
                 </div>
@@ -175,12 +195,12 @@ const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
                 Shipping and taxes calculated at checkout.
               </p>
               <div className="my-6">
-                {/* <Link
-                  href={isLoggedIn ? `/checkout` : "/auth"}
+                <Link
+                  href={isLoggedIn ? `/checkout` : ""}
                   className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600"
                 >
                   Proceed to checkout
-                </Link> */}
+                </Link>
                 {items.length > 0 && (
                   <Button
                     className="mt-3 w-full bg-red-200 px-6 py-3 text-red-500 text-sm hover:bg-red-300"

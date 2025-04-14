@@ -69,8 +69,8 @@ const ProductInformation = ({
               <p className="text-sm text-gray-500 line-clamp-6">{product?.description}</p>
               <div className="flex-grow">
                 <span className="text-orange-400">Vendor</span>{" "}
-                <Link href={`/shop/${product?.vendor?.id}`} className="hover:underline">
-                  <p className="text-sm">{product?.vendor?.name}</p>
+                <Link href={`/shop/${product?.store?.id}`} className="hover:underline">
+                  <p className="text-sm">{product?.store?.name}</p>
                 </Link>
               </div>
               <Button className="bg-orange-400 mt-4 ring-0" onClick={() => handleAddToCart(product)}>Add to Cart</Button>

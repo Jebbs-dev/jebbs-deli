@@ -37,7 +37,7 @@ const CartItem = ({ items }: CartItemComponentProps) => {
             <h3>{items.name}</h3>
             <p className="ml-4">₦{formatNumberWithCommas(Number(totalPrice.toFixed(2)))}</p>
           </div>
-          <p className="mt-1 text-sm text-gray-500">{items.vendor?.name}</p>
+          <p className="mt-1 text-sm text-gray-500">{items.store?.name}</p>
         </div>
         <div className="flex flex-1 items-end justify-between text-sm">
           <div className="flex items-center gap-2 bg-orange-50 rounded-full px-2">
