@@ -7,8 +7,8 @@ export type Product = {
   category: string;
   description: string;
   image: string;
-  vendor?: Vendor;
-  vendorId?: string;
+  store?: Vendor;
+  storeId?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -46,8 +46,8 @@ export type Cart = {
   createdAt?:  string;
   updatedAt?: string;
   cartItems: CartItemProps;
-  vendor: Vendor;
-  vendorId: string;
+  store: Vendor;
+  storeId: string;
 }
 
 
