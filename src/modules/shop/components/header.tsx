@@ -141,7 +141,7 @@ const Header = () => {
                     <DropdownMenuItem className="cursor-pointer" onClick={()=>{
                       logout();
                       setIsOpen(false);
-                      router.push("/auth")
+                      router.push("/shop")
                     }}>
                       Logout
                       <DropdownMenuShortcut>
