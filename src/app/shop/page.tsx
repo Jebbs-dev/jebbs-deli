@@ -11,6 +11,9 @@ import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast"
+import useAuthStore from "@/store/auth";
+import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
+import { useFetchCart } from "@/modules/shop/cart/queries/fetch-cart";
 // Skeleton component for loading state
 const ProductSkeleton = () => {
   return (
@@ -28,11 +31,14 @@ const ProductSkeleton = () => {
 
 const Shop = () => {
   const { toast } = useToast()
+    const { isLoggedIn, user } = useAuthStore();
+    const { data: products, isLoading, isFetching } = useFetchProduct();
+    const { mutateAsync: updateCart, isPending } = useUpdateCart();
+    const { data: cartData } = useFetchCart(user?.id ? String(user.id) : "");
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectProduct, setSelectProduct] = useState<Product | null>(null);
 
-  const { data: products, isPending, isFetching } = useFetchProduct();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { addItem } = useCartStore();
 
@@ -55,15 +61,74 @@ const Shop = () => {
   };
 
   // Handle adding product to cart
-  const handleAddToCart = (product: any) => {
-    addItem(product);
-    // toast.success(`${product.name} added to cart!`, {
-    //   position: "top-right",
-    //   duration: 2000,
-    // });
-    toast({
-      description: `${product.name} added to cart!`,
-    })
+  const handleAddToCart = async (product: Product) => {
+    if (isLoggedIn && user?.id && cartData) {
+      try {
+        // Get existing cart items
+        const existingCartItems = cartData.cartGroups
+          ? cartData.cartGroups.flatMap((group: any) =>
+              group.cartItems.map((item: any) => ({
+                ...item.product,
+                quantity: item.quantity,
+                store: group.store,
+                storeId: group.storeId,
+              }))
+            )
+          : [];
+
+        // Check if product already exists in cart
+        const existingItemIndex = existingCartItems.findIndex(
+          (item: any) => item.id === product.id
+        );
+
+        let updatedCartItems;
+        
+        if (existingItemIndex !== -1) {
+          // Increase quantity of existing item
+          updatedCartItems = [...existingCartItems];
+          updatedCartItems[existingItemIndex] = {
+            ...updatedCartItems[existingItemIndex],
+            quantity: updatedCartItems[existingItemIndex].quantity + 1,
+          };
+        } else {
+          // Add new item with quantity 1
+          updatedCartItems = [
+            ...existingCartItems,
+            { ...product, quantity: 1, storeId: product.store?.id },
+          ];
+        }
+
+        // Calculate new total price
+        const newTotalPrice = updatedCartItems.reduce(
+          (sum, item) => sum + (item.price * item.quantity), 
+          0
+        );
+
+        // Update cart in backend
+        await updateCart({
+          cartId: cartData.id,
+          userId: user.id,
+          cartItems: updatedCartItems,
+          totalPrice: newTotalPrice,
+        });
+
+        toast({
+          description: `${product.name} added to cart!`,
+        });
+      } catch (error) {
+        console.error("Failed to add to cart:", error);
+        toast({
+          description: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Use local cart for non-authenticated users
+      addItem(product);
+      toast({
+        description: `${product.name} added to cart!`,
+      });
+    }
   };
 
   // Create an array of 8 items for skeleton loading
@@ -128,7 +193,7 @@ const Shop = () => {
           </section>
 
           <section>
-            {isPending ? (
+            {isLoading ? (
               // Skeleton loading state
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 animate-pulse">
                 {skeletonArray.map((_, index) => (
@@ -196,8 +261,9 @@ const Shop = () => {
                         <button
                           className="px-3 py-1 bg-amber-100 text-amber-800 rounded-md text-sm hover:bg-amber-200 transition-colors"
                           onClick={() => handleAddToCart(product)}
+                          disabled={isPending}
                         >
-                          Add to Cart
+                          {"Add to Cart"}
                         </button>
                       </div>
                     </div>
