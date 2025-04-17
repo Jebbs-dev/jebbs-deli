@@ -18,12 +18,19 @@ import {
 import { FileClock, LogOut, Settings } from "lucide-react";
 import useAuthStore from "@/store/auth";
 import { useRouter } from "next/navigation";
+import { useFetchCart } from "../cart/queries/fetch-cart";
+import useCartStore from "@/store/cart";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const { isLoggedIn, logout } = useAuthStore();
+  const { user, isLoggedIn, logout } = useAuthStore();
+  const { totalItems } = useCartStore(); 
   const router = useRouter();
+  
+  // Fetch cart data
+  const { data: fetchedCartData } = useFetchCart(user?.id ? String(user.id) : "");
+  const totalCartItems = fetchedCartData?.cartGroups?.flatMap(group => group.cartItems).reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   return (
     <>
@@ -90,6 +97,11 @@ const Header = () => {
                   <circle cx="10.5" cy="19.5" r="1.5"></circle>
                   <circle cx="17.5" cy="19.5" r="1.5"></circle>
                 </svg>
+                {(isLoggedIn? totalCartItems : totalItems) > 0 && (
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1">
+                    {totalCartItems || totalItems}
+                  </span>
+                )}
               </Button>
 
               <DropdownMenu>
