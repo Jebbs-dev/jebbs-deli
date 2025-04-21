@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useState } from "react";
-import CartSheet from "../cart/components/cart-sheet";
+import CartSheet, { FetchedCartData } from "../cart/components/cart-sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,17 +20,25 @@ import useAuthStore from "@/store/auth";
 import { useRouter } from "next/navigation";
 import { useFetchCart } from "../cart/queries/fetch-cart";
 import useCartStore from "@/store/cart";
+import { useCartViewStore } from "@/store/cart-data";
 
 const Header = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  // const [isOpen, setIsOpen] = useState(false);
+
+  const { isOpen, setIsOpen } = useCartViewStore();
 
   const { user, isLoggedIn, logout } = useAuthStore();
-  const { totalItems } = useCartStore(); 
+  const { totalItems } = useCartStore();
   const router = useRouter();
-  
+
   // Fetch cart data
-  const { data: fetchedCartData } = useFetchCart(user?.id ? String(user.id) : "");
-  const totalCartItems = fetchedCartData?.cartGroups?.flatMap(group => group.cartItems).reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const { data: fetchedCartData } = useFetchCart(
+    user?.id ? String(user.id) : ""
+  );
+  const totalCartItems =
+    (fetchedCartData as FetchedCartData)?.cartGroups
+      ?.flatMap((group) => group.cartItems)
+      .reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   return (
     <>
@@ -97,7 +105,7 @@ const Header = () => {
                   <circle cx="10.5" cy="19.5" r="1.5"></circle>
                   <circle cx="17.5" cy="19.5" r="1.5"></circle>
                 </svg>
-                {(isLoggedIn? totalCartItems : totalItems) > 0 && (
+                {(isLoggedIn ? totalCartItems : totalItems) > 0 && (
                   <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1">
                     {totalCartItems || totalItems}
                   </span>
@@ -150,11 +158,14 @@ const Header = () => {
                         <Settings size={18} />
                       </DropdownMenuShortcut>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer" onClick={()=>{
-                      logout();
-                      setIsOpen(false);
-                      router.push("/shop")
-                    }}>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => {
+                        logout();
+                        setIsOpen(false);
+                        router.push("/shop");
+                      }}
+                    >
                       Logout
                       <DropdownMenuShortcut>
                         <LogOut size={18} />
