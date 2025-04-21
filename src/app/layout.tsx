@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <QueryProvider>
       <html lang="en">
-        <body className={GeistSans.className}>
+        <body className={`${GeistSans.className} antialiased`}>
           <CartProvider>
             <FaveProvider>
               <PathnameProvider>
