@@ -37,6 +37,7 @@ export type User = {
   email: string;
   password: string;
   role: string;
+  address?: string;
 }
 
 export type Cart = {
@@ -48,6 +49,28 @@ export type Cart = {
   cartItems: CartItemProps;
   store: Vendor;
   storeId: string;
+}
+
+export type Address = {
+  id: string;
+  description: string;
+  place_id: string;
+  reference: string;
+  types: string[];
+}
+
+export type Order = {
+  id: string;
+  storeId: string;
+  userId: string;
+  serviceFee: number;
+  deliveryFee: number;
+  subTotal: number;
+  totalPrice: number;
+  vendorAddress: string;
+  customerAddress: string;
+  status: string;
+  createdAt?: string
 }
 
 
