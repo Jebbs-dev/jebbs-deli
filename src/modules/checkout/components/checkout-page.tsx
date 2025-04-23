@@ -11,7 +11,7 @@ import CartItem from "@/modules/shop/cart/components/cart-item";
 import Link from "next/link";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   useUpdateCart,
   useRemoveFromCart,
@@ -27,26 +27,23 @@ import { ArrowDown, ArrowLeft, ChevronRight, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CheckoutOrderPage from "./checkout-order-page";
 import PaymentPage from "./payment-page";
+import { useCartViewStore } from "@/store/cart-data";
 
 interface ChekoutProps {
   goToCart: () => void;
-  storeTotals: StoreTotal[];
-  typedCartData: FetchedCartData | undefined;
-  openStoreId: string | null;
-  setIsOpen: (value: boolean) => void;
 }
 
-const CheckoutPage = ({
-  goToCart,
-  storeTotals,
-  typedCartData,
-  openStoreId,
-  setIsOpen
-}: ChekoutProps) => {
-  
+const CheckoutPage = ({ goToCart }: ChekoutProps) => {
   const [toggleCheckoutView, setToggleCheckoutView] = useState<
     "order" | "payment"
   >("order");
+
+  const {
+    storeTotals,
+    typedCartData,
+    openStoreId,
+    setIsOpen,
+  } = useCartViewStore();
 
   return (
     <>
@@ -91,10 +88,10 @@ const CheckoutPage = ({
           proceedToPayment={() => {
             setToggleCheckoutView("payment");
           }}
-          storeTotals={storeTotals}
-          typedCartData={typedCartData}
-          openStoreId={openStoreId}
-          setIsOpen={setIsOpen}
+          // storeTotals={storeTotals}
+          // typedCartData={typedCartData}
+          // openStoreId={openStoreId}
+          // setIsOpen={setIsOpen}
         />
       ) : (
         <PaymentPage />
