@@ -18,23 +18,17 @@ import {
 } from "@/modules/shop/cart/components/cart-sheet";
 import { ArrowDown, ArrowLeft, ChevronRight, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCartViewStore } from "@/store/cart-data";
 
 interface CheckoutOrderProps {
   proceedToPayment: () => void;
-  storeTotals: StoreTotal[];
-  typedCartData: FetchedCartData | undefined;
-  openStoreId: string | null;
-  setIsOpen: (value: boolean) => void;
 }
 
-const CheckoutOrderPage = ({
-  storeTotals,
-  typedCartData,
-  openStoreId,
-  proceedToPayment,
-  setIsOpen
-}: CheckoutOrderProps) => {
-  const { items, totalAmount, addItem, removeItem } = useCartStore();
+const CheckoutOrderPage = ({ proceedToPayment }: CheckoutOrderProps) => {
+  const { addItem, removeItem } = useCartStore();
+
+  const { storeTotals, typedCartData, openStoreId, setIsOpen } =
+    useCartViewStore();
 
   const { isLoggedIn, user } = useAuthStore();
 
@@ -98,9 +92,8 @@ const CheckoutOrderPage = ({
                     <Link
                       href={`/shop/${store.storeId}`}
                       className="flex items-center gap-2 bg-primary text-white rounded-full px-4 py-2"
-
-                      onClick={()=> {
-                        setIsOpen(false)
+                      onClick={() => {
+                        setIsOpen(false);
                       }}
                     >
                       <p className="mr-2">+</p>
