@@ -34,16 +34,11 @@ interface ChekoutProps {
 }
 
 const CheckoutPage = ({ goToCart }: ChekoutProps) => {
-  const [toggleCheckoutView, setToggleCheckoutView] = useState<
-    "order" | "payment"
-  >("order");
+    const {
+      toggleCheckoutView,
+      setToggleCheckoutView
+    } = useCartViewStore();
 
-  const {
-    storeTotals,
-    typedCartData,
-    openStoreId,
-    setIsOpen,
-  } = useCartViewStore();
 
   return (
     <>
