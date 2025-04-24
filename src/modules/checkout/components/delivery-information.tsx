@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useFetchVendorStoreById } from "@/modules/shop/queries/fetch-vendor-store-by-id";
+import { useCartViewStore } from "@/store/cart-data";
+import { formatNumberWithCommas } from "@/utils/formatNumber";
 import {
   Banknote,
   Bike,
@@ -10,9 +13,77 @@ import {
   MapPin,
 } from "lucide-react";
 import React from "react";
+import { useCreateOrder } from "@/modules/checkout/mutations/create-order";
+import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
+import useAuthStore from "@/store/auth";
 
-const DeliveryInformation = () => {
-  const thresholdInKm = 15;
+interface DeliveryInformationProps {
+  thresholdInKm: number;
+  distanceToVendor: number;
+  userId: string;
+  storeId: string;
+  storeAddress: string;
+  userAddress: string;
+}
+
+const DeliveryInformation = ({
+  thresholdInKm,
+  distanceToVendor,
+  userId,
+  storeId,
+  storeAddress,
+  userAddress,
+}: DeliveryInformationProps) => {
+  const { storeTotals, cartTotal, typedCartData } = useCartViewStore();
+
+  const { mutateAsync: createOrder } = useCreateOrder();
+
+  const { mutateAsync: updateCart } = useUpdateCart();
+
+  // const thresholdInKm = 15;
+  // const distanceToVendor = 14;
+  const deliveryFee = 3000;
+  const serviceFee = 0.1 * cartTotal;
+  const totalOrderCost = deliveryFee + serviceFee + cartTotal;
+
+  const handlePlaceOrder = async () => {
+    const orderData = {
+      userId,
+      storeId,
+      serviceFee: serviceFee,
+      deliveryFee: deliveryFee,
+      subTotal: cartTotal,
+      totalPrice: totalOrderCost,
+      status: "pending",
+      vendorAddress: storeAddress,
+      customerAddress: userAddress,
+    };
+
+    const orderItems = storeTotals.flatMap((store) =>
+      store.products.map((product) => ({
+        storeId: store.storeId,
+        orderId: "",
+        productId: product.id,
+        quantity: product.quantity,
+      }))
+    );
+
+    try {
+      await createOrder({ orderData, orderItems });
+
+      await updateCart({
+        cartId: typedCartData!.id,
+        userId: userId,
+        cartItems: [], // Empty array will clear all cart groups
+        totalPrice: 0,
+      });
+
+      // Handle success (e.g., show a success message, redirect, etc.)
+    } catch (error) {
+      console.error("Order creation failed:", error);
+      // Handle error (e.g., show an error message)
+    }
+  };
 
   return (
     <div className="py-5">
@@ -99,20 +170,23 @@ const DeliveryInformation = () => {
       </div>
       <div className="border-b border-gray-200 py-2">
         <span className="flex flex-row justify-between items-center h-10">
-          <p>Sub-total(4 items)</p>
-          <p>#12,000</p>
+          <p>
+            Sub-total ({storeTotals.length}{" "}
+            {storeTotals.length === 1 ? "item" : "items"})
+          </p>
+          <p>₦{formatNumberWithCommas(Number(cartTotal.toFixed(2)))}</p>
         </span>
         <span className="flex flex-row justify-between items-center h-10">
           <p>Delivery Fee</p>
-          <p>#3,000</p>
+          <p>₦{formatNumberWithCommas(Number(deliveryFee.toFixed(2)))}</p>
         </span>
-        {thresholdInKm && (
+        {distanceToVendor > thresholdInKm && (
           <div className="border-b border-gray-200 py-3">
             <span className="flex flex-row gap-4 items-center h-20 bg-red-200 rounded-md p-2">
-              <Bike className="w-1/4" />
+              <Bike className="w-1/4 text-red-700" />
               <p className="text-red-700 text-sm flex-grow">
-                The vendor is 20km away, consider ordering from a nearby vendor
-                to get lower delivery fees
+                {`The vendor is ${distanceToVendor} away, consider ordering from a nearby vendor
+                to get lower delivery fees`}
               </p>
             </span>
           </div>
@@ -122,11 +196,11 @@ const DeliveryInformation = () => {
             <p> Service Fee</p>
             <CircleAlert size={17} className="text-yellow-500" />
           </span>
-          <p>#1,200</p>
+          <p>₦{formatNumberWithCommas(Number(serviceFee.toFixed(2)))}</p>
         </span>
         <span className="flex flex-row justify-between items-center h-10 font-semibold">
           <p>Total</p>
-          <p>#18,700</p>
+          <p>₦{formatNumberWithCommas(Number(totalOrderCost.toFixed(2)))}</p>
         </span>
       </div>
       <div className="border-b border-gray-200 py-2">
@@ -135,7 +209,7 @@ const DeliveryInformation = () => {
         </span>
       </div>
       <div className="mt-4 flex flex-col gap-4">
-        <Button asChild>
+        <Button asChild onClick={handlePlaceOrder}>
           <span className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600">
             Place Order
           </span>
