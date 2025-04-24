@@ -6,7 +6,7 @@ import { formatNumberWithCommas } from "@/utils/formatNumber";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 import Image from "next/image";
 import Link from "next/link";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductInformationProps {
   isOpen: boolean;
@@ -19,16 +19,14 @@ const ProductInformation = ({
   setIsOpen,
   product,
 }: ProductInformationProps) => {
-
   const { addItem } = useCartStore();
-  const { toast } = useToast()
-
+  const { toast } = useToast();
 
   const handleAddToCart = (product: any) => {
     addItem(product);
     toast({
       description: `${product.name} added to cart!`,
-    })
+    });
   };
 
   return (
@@ -66,14 +64,26 @@ const ProductInformation = ({
                 ₦{formatNumberWithCommas(Number(product?.price.toFixed(2)))}
               </p>
               <span className="text-orange-400">Description</span>
-              <p className="text-sm text-gray-500 line-clamp-6">{product?.description}</p>
+              <p className="text-sm text-gray-500 line-clamp-6">
+                {product?.description}
+              </p>
               <div className="flex-grow">
                 <span className="text-orange-400">Vendor</span>{" "}
-                <Link href={`/shop/${product?.store?.id}`} className="hover:underline">
+                <Link
+                  href={`/shop/${product?.store?.id}`}
+                  className="hover:underline"
+                >
                   <p className="text-sm">{product?.store?.name}</p>
                 </Link>
               </div>
-              <Button className="bg-orange-400 mt-4 ring-0" onClick={() => handleAddToCart(product)}>Add to Cart</Button>
+              <Button
+                className="bg-orange-400 mt-4 ring-0"
+                onClick={() => {
+                  handleAddToCart(product);
+                }}
+              >
+                Add to Cart
+              </Button>
             </div>
           </div>
         </DialogContent>
