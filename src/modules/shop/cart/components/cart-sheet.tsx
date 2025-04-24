@@ -23,6 +23,7 @@ import AuthModal from "@/modules/auth/components/auth-modal";
 import { useFetchCart } from "../queries/fetch-cart";
 import CheckoutPage from "@/modules/checkout/components/checkout-page";
 import CartPage from "./cart-page";
+import { useCartViewStore } from "@/store/cart-data";
 
 interface CartProps {
   isOpen: boolean;
@@ -62,7 +63,7 @@ export interface FetchedCartData {
   cartGroups: CartStoreGroup[];
 }
 
-const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
+const CartSheet = () => {
   const {
     items,
     totalAmount,
@@ -81,14 +82,6 @@ const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
   const { data: fetchedCartData, isLoading } = useFetchCart(
     user?.id ? String(user.id) : ""
   );
-  const typedCartData = fetchedCartData as FetchedCartData | undefined;
-
-  const [toggleCartView, setToggleCartView] = useState<"cart" | "checkout">(
-    "cart"
-  );
-
-  const [openStoreId, setOpenStoreId] = useState<string | null>(null);
-
 
   // Effect to sync local cart to backend when user logs in
   useEffect(() => {
@@ -123,124 +116,19 @@ const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
     }
   }, [addCart, isLoggedIn, totalAmount, user, items, clearCart]);
 
-  // Fetch the products from the fetchedCartData and transform them
-  const fetchedCartItems: CartItemProps[] =
-    typedCartData?.cartGroups?.flatMap((group) =>
-      group.cartItems.map((item) => {
-        // Extract the basic store fields from the group
-        const store = {
-          ...group.store,
-          // Add default values for required Vendor fields that might be missing
-          email: "",
-          telephone: "",
-          address: "",
-          logo: "",
-          isActive: true,
-          slug: "",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+  const {
+    isOpen,
+    setIsOpen,
+    initializeCartData,
+    toggleCartView,
+    setToggleCartView,
+  } = useCartViewStore();
 
-        // Cast to any first to avoid TypeScript issues with property assignments
-        return {
-          ...item.product, // Spread product details
-          quantity: item.quantity, // Add quantity
-          store, // Add properly typed store
-          storeId: group.storeId, // Add storeId
-          cartId: typedCartData.id, // Add cartId for backend operations
-        } as unknown as CartItemProps;
-      })
-    ) ?? [];
-
-  // Group products by vendor - use backend data for logged in users, local data otherwise
-  const cartItemsToUse = isLoggedIn ? fetchedCartItems : items;
-
-  const groupedByVendorStore = cartItemsToUse.reduce<
-    Record<string, CartItemProps[]>
-  >((acc, product) => {
-    const storeId = product.store?.id || "unknown";
-    if (!acc[storeId]) {
-      acc[storeId] = [];
+  useEffect(() => {
+    if (fetchedCartData) {
+      initializeCartData(fetchedCartData, items, isLoggedIn);
     }
-    acc[storeId].push(product);
-    return acc;
-  }, {});
-
-  // Calculate totals for each vendor
-  const storeTotals: StoreTotal[] = Object.entries(groupedByVendorStore).map(
-    ([storeId, products]) => ({
-      storeId,
-      vendorStoreName: products[0]?.store?.name || "Unknown Vendor",
-      totalQuantity: products.reduce(
-        (sum: number, product) => sum + product.quantity,
-        0
-      ),
-      totalAmount: products.reduce(
-        (sum: number, product) => sum + product.price * product.quantity,
-        0
-      ),
-      billboard: products[0]?.store?.billboard,
-      products,
-    })
-  );
-
-  // Calculate the overall cart total (handles both local and backend cart)
-  const cartTotal = storeTotals.reduce(
-    (sum, store) => sum + store.totalAmount,
-    0
-  );
-
-  // Handle removing all items from a vendor
-  const handleClearVendorItems = async (storeId: string) => {
-    if (isLoggedIn && user?.id && typedCartData?.id) {
-      try {
-        console.log("Clearing vendor items for store:", storeId);
-
-        // Filter out the entire cart group for this vendor
-        const remainingGroups = typedCartData.cartGroups.filter(
-          (group) => group.storeId !== storeId
-        );
-
-        // Get all items from the remaining groups
-        const allCartItems = remainingGroups.flatMap((group) =>
-          group.cartItems.map((item) => ({
-            id: item.product.id,
-            productId: item.product.id,
-            quantity: item.quantity,
-            storeId: group.storeId,
-          }))
-        );
-
-        console.log("Remaining groups after removal:", remainingGroups.length);
-        console.log("Remaining items after removal:", allCartItems);
-
-        // Calculate new total price
-        const newTotalPrice = allCartItems.reduce((sum, item) => {
-          // Find the original product to get the price
-          const product = typedCartData.cartGroups
-            .flatMap((g) => g.cartItems)
-            .find((ci) => ci.product.id === item.id)?.product;
-
-          return sum + (product?.price || 0) * item.quantity;
-        }, 0);
-
-        // Update the cart with only the remaining items
-        const result = await updateCart({
-          cartId: typedCartData.id,
-          userId: user.id,
-          cartItems: allCartItems,
-          totalPrice: newTotalPrice,
-        });
-
-        console.log("Clear vendor result:", result);
-      } catch (error) {
-        console.error("Failed to clear vendor items:", error);
-      }
-    } else {
-      // Use local cart store function
-      clearVendorItems(storeId);
-    }
-  };
+  }, [fetchedCartData, items, isLoggedIn]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -261,23 +149,12 @@ const CartSheet = ({ isOpen, setIsOpen }: CartProps) => {
               goToCheckout={() => {
                 setToggleCartView("checkout");
               }}
-              handleClearVendorItems={handleClearVendorItems}
-              storeTotals={storeTotals}
-              typedCartData={typedCartData}
-              cartTotal={cartTotal}
-              cartItemsToUse={cartItemsToUse}
-              openStoreId={openStoreId}
-              setOpenStoreId={setOpenStoreId}
             />
           ) : (
             <CheckoutPage
               goToCart={() => {
                 setToggleCartView("cart");
               }}
-              storeTotals={storeTotals}
-              typedCartData={typedCartData}
-              openStoreId={openStoreId}
-              setIsOpen={setIsOpen}
             />
           )}
         </SheetContent>
