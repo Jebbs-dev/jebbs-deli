@@ -95,10 +95,10 @@ const PaymentPage = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="delivery" className="h-[73vh]">
-            <DeliveryInformation thresholdInKm={thresholdInKm} distanceToVendor={distanceToVendor} userId={String(user?.id)} storeId={storeInformation?.id} />
+            <DeliveryInformation thresholdInKm={thresholdInKm} distanceToVendor={distanceToVendor} userId={String(user?.id)} storeId={storeInformation?.id} storeAddress={storeInformation?.address} userAddress={userInformation?.address} />
           </TabsContent>
           <TabsContent value="pickup">
-            <PickupInformation thresholdInKm={thresholdInKm} distanceToVendor={distanceToVendor} />
+            <PickupInformation thresholdInKm={thresholdInKm} distanceToVendor={distanceToVendor} userId={String(user?.id)} storeId={storeInformation?.id} storeAddress={storeInformation?.address} userAddress={userInformation?.address} />
           </TabsContent>
         </Tabs>
       </div>
