@@ -11,6 +11,7 @@ import { User } from "@/types/types";
 interface CartViewState {
   isOpen: boolean;
   toggleCartView: "cart" | "checkout";
+  toggleCheckoutView: "order" | "payment";
   openStoreId: string | null;
   typedCartData?: FetchedCartData;
   cartItemsToUse: CartItemProps[];
@@ -19,6 +20,7 @@ interface CartViewState {
 
   setIsOpen: (open: boolean) => void;
   setToggleCartView: (view: "cart" | "checkout") => void;
+  setToggleCheckoutView: (view: "order" | "payment") => void;
   setOpenStoreId: (storeId: string | null) => void;
   initializeCartData: (
     data: FetchedCartData | undefined,
@@ -38,6 +40,7 @@ interface CartViewState {
 export const useCartViewStore = create<CartViewState>((set, get) => ({
   isOpen: false,
   toggleCartView: "cart",
+  toggleCheckoutView: "order",
   openStoreId: null,
   typedCartData: undefined,
   cartItemsToUse: [],
@@ -46,6 +49,7 @@ export const useCartViewStore = create<CartViewState>((set, get) => ({
 
   setIsOpen: (open) => set({ isOpen: open }),
   setToggleCartView: (view) => set({ toggleCartView: view }),
+  setToggleCheckoutView: (view) => set({ toggleCheckoutView: view }),
   setOpenStoreId: (storeId) => set({ openStoreId: storeId }),
 
   initializeCartData: (typedCartData, localItems, isLoggedIn) => {
