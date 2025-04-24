@@ -3,22 +3,72 @@ import { useCartViewStore } from "@/store/cart-data";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import { Banknote, Bike, CircleAlert } from "lucide-react";
 import React from "react";
+import { useCreateOrder } from "../mutations/create-order";
+import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
 
 interface PickupInformationProps {
   thresholdInKm: number;
   distanceToVendor: number;
+  userId: string;
+  storeId: string;
+  storeAddress: string;
+  userAddress: string;
 }
 const PickupInformation = ({
   thresholdInKm,
   distanceToVendor,
+  userId,
+  storeId,
+  storeAddress,
+  userAddress,
 }: PickupInformationProps) => {
-  const { storeTotals, cartTotal } = useCartViewStore();
+  const { storeTotals, cartTotal, typedCartData } = useCartViewStore();
 
-  // const thresholdInKm = 15;
-  // const distanceToVendor = 14;
-  const deliveryFee = 3000;
+  const { mutateAsync: createOrder } = useCreateOrder();
+
+  const { mutateAsync: updateCart } = useUpdateCart();
+
   const serviceFee = 0.1 * cartTotal;
-  const totalOrderCost = deliveryFee + serviceFee + cartTotal;
+  const totalOrderCost = serviceFee + cartTotal;
+
+  const handlePlaceOrder = async () => {
+    const orderData = {
+      userId,
+      storeId,
+      serviceFee: serviceFee,
+      deliveryFee: 0,
+      subTotal: cartTotal,
+      totalPrice: totalOrderCost,
+      status: "pending",
+      vendorAddress: storeAddress,
+      customerAddress: userAddress,
+    };
+
+    const orderItems = storeTotals.flatMap((store) =>
+      store.products.map((product) => ({
+        storeId: store.storeId,
+        orderId: "",
+        productId: product.id,
+        quantity: product.quantity,
+      }))
+    );
+
+    try {
+      await createOrder({ orderData, orderItems });
+
+      await updateCart({
+        cartId: typedCartData!.id,
+        userId: userId,
+        cartItems: [], // Empty array will clear all cart groups
+        totalPrice: 0,
+      });
+
+      // Handle success (e.g., show a success message, redirect, etc.)
+    } catch (error) {
+      console.error("Order creation failed:", error);
+      // Handle error (e.g., show an error message)
+    }
+  };
 
   return (
     <div className="py-5">
@@ -51,10 +101,10 @@ const PickupInformation = ({
           </p>
           <p>₦{formatNumberWithCommas(Number(cartTotal.toFixed(2)))}</p>
         </span>
-        <span className="flex flex-row justify-between items-center h-10">
+        {/* <span className="flex flex-row justify-between items-center h-10">
           <p>Delivery Fee</p>
           <p>₦{formatNumberWithCommas(Number(deliveryFee.toFixed(2)))}</p>
-        </span>
+        </span> */}
         {distanceToVendor > thresholdInKm && (
           <div className="border-b border-gray-200 py-3">
             <span className="flex flex-row gap-4 items-center h-20 bg-red-200 rounded-md p-2">
