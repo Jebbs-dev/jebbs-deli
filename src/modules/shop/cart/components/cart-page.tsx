@@ -22,42 +22,43 @@ import { useAuthFormModal } from "@/store/auth-form-modal";
 import AuthModal from "@/modules/auth/components/auth-modal";
 import { useFetchCart } from "../queries/fetch-cart";
 import { FetchedCartData, StoreTotal } from "./cart-sheet";
+import { useCartViewStore } from "@/store/cart-data";
+import { useFetchOrders } from "@/modules/checkout/queries/fetch-order-by-userId";
 
 interface CartProps {
-  handleClearVendorItems(storeId: string): void;
   goToCheckout: () => void;
-  storeTotals: StoreTotal[];
-  typedCartData: FetchedCartData | undefined;
-  cartTotal: any;
-  cartItemsToUse: any;
-  openStoreId: string | null;
-  setOpenStoreId: Dispatch<SetStateAction<string | null>>;
 }
 
-const CartPage = ({
-  handleClearVendorItems,
-  storeTotals,
-  typedCartData,
-  cartTotal,
-  cartItemsToUse,
-  goToCheckout,
-  openStoreId,
-  setOpenStoreId,
-}: CartProps) => {
+const CartPage = ({ goToCheckout }: CartProps) => {
   const { mutateAsync: updateCart } = useUpdateCart();
 
   const {
-    items,
-    totalAmount,
     addItem,
     removeItem,
     clearCart,
     clearVendorItems,
   } = useCartStore();
 
+  const {
+    storeTotals,
+    typedCartData,
+    cartItemsToUse,
+    openStoreId,
+    setOpenStoreId,
+    handleClearVendorItems,
+  } = useCartViewStore();
+
   const { onAuthFormOpen } = useAuthFormModal();
 
   const { isLoggedIn, user } = useAuthStore();
+
+  const {data: orderData, isLoading: isOrderLoading} = useFetchOrders(String(user?.id));
+
+  if(isOrderLoading){
+    return <div>Loading</div>
+  }
+
+  console.log(orderData);
 
   return (
     <>
@@ -144,7 +145,17 @@ const CartPage = ({
                 </Button>
                 <Button
                   className="w-full bg-red-100 px-6 py-3 text-red-500 text-sm hover:bg-red-200"
-                  onClick={() => handleClearVendorItems(store.storeId)}
+                  onClick={() => {
+                    // handleClearVendorItems(store.storeId)
+
+                    handleClearVendorItems(
+                      store.storeId,
+                      isLoggedIn,
+                      String(user?.id),
+                      updateCart,
+                      clearVendorItems
+                    );
+                  }}
                 >
                   Clear {store.vendorStoreName}&apos;s Items
                 </Button>
