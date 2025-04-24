@@ -4,15 +4,26 @@ import { Button } from "@/components/ui/button";
 import CartItem from "@/modules/shop/cart/components/cart-item";
 import useCartStore, { CartItemProps } from "@/store/cart";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import Link from "next/link";
 import { useFetchVendorStoreById } from "@/modules/shop/queries/fetch-vendor-store-by-id";
-import { ArrowLeft } from "lucide-react";
+import { ArrowDown, ArrowLeft } from "lucide-react";
 import { useFetchProductsByStore } from "@/modules/shop/queries/fetch-products-by-store";
 import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/types/types";
+import CartPage from "@/modules/shop/cart/components/cart-page";
+import CartSheet from "@/modules/shop/cart/components/cart-sheet";
+import { useCartViewStore } from "@/store/cart-data";
+import CheckoutPage from "@/modules/checkout/components/checkout-page";
+import useAuthStore from "@/store/auth";
+import { useAuthFormModal } from "@/store/auth-form-modal";
+import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
+import CartPageComponents from "@/modules/shop/cart/components/cart-page-components";
+import CheckoutOrderPage from "@/modules/checkout/components/checkout-order-page";
+import PaymentPage from "@/modules/checkout/components/payment-page";
+import { useFetchCart } from "@/modules/shop/cart/queries/fetch-cart";
 
 const specializedTags = [
   "All",
@@ -32,22 +43,45 @@ const StorePage = () => {
 
   const { storeId } = useParams();
 
-  const { items, totalAmount, addItem, removeItem, clearCart } = useCartStore();
+  const { addItem, removeItem, clearCart, clearVendorItems } = useCartStore();
+
+  const { onAuthFormOpen } = useAuthFormModal();
 
   const [selectedTag, setSelectedTag] = useState<string>("All");
 
   const router = useRouter();
 
-  const { data: vendorStoreData, isPending } = useFetchVendorStoreById(String(storeId));
+  const { isLoggedIn, user } = useAuthStore();
+
+  const { data: cartData } = useFetchCart(user?.id ? String(user.id) : "");
+
+  const { mutateAsync: updateCart } = useUpdateCart();
+
+  const {
+    storeTotals,
+    typedCartData,
+    cartItemsToUse,
+    openStoreId,
+    setOpenStoreId,
+    handleClearVendorItems,
+    toggleCartView,
+    setToggleCartView,
+    toggleCheckoutView,
+    setToggleCheckoutView,
+  } = useCartViewStore();
+
+  const { data: vendorStoreData, isPending } = useFetchVendorStoreById(
+    String(storeId)
+  );
   // const { data: products, isPending } = useFetchProductsBystore(String(storeId));
 
-  const localStorageCart = JSON.parse(
-    localStorage.getItem("jebbs-cart-storage") || "[]"
-  );
+  // const localStorageCart = JSON.parse(
+  //   localStorage.getItem("jebbs-cart-storage") || "[]"
+  // );
 
-  console.log(localStorageCart);
+  // console.log(localStorageCart);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = async (product: Product) => {
     // Ensure store information is attached to the product
     const productWithStore = {
       ...product,
@@ -55,10 +89,76 @@ const StorePage = () => {
       storeId: vendorStoreData?.id, // Also attach storeId for direct access
     };
 
-    addItem(productWithStore);
-    toast({
-      description: `${product.name} added to cart!`,
-    });
+    if (isLoggedIn && user?.id && cartData) {
+      try {
+        // Get existing cart items
+        const existingCartItems = cartData.cartGroups
+          ? cartData.cartGroups.flatMap((group: any) =>
+              group.cartItems.map((item: any) => ({
+                ...item.product,
+                quantity: item.quantity,
+                store: group.store,
+                storeId: group.storeId,
+              }))
+            )
+          : [];
+
+        // Check if product already exists in cart
+        const existingItemIndex = existingCartItems.findIndex(
+          (item: any) => item.id === productWithStore.id
+        );
+
+        let updatedCartItems;
+
+        if (existingItemIndex !== -1) {
+          // Increase quantity of existing item
+          updatedCartItems = [...existingCartItems];
+          updatedCartItems[existingItemIndex] = {
+            ...updatedCartItems[existingItemIndex],
+            quantity: updatedCartItems[existingItemIndex].quantity + 1,
+          };
+        } else {
+          // Add new item with quantity 1
+          updatedCartItems = [
+            ...existingCartItems,
+            { ...productWithStore, quantity: 1 },
+          ];
+        }
+
+        // Calculate new total price
+        const newTotalPrice = updatedCartItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+
+        // Update cart in backend
+        await updateCart({
+          cartId: cartData.id,
+          userId: user.id,
+          cartItems: updatedCartItems,
+          totalPrice: newTotalPrice,
+        });
+
+        // Add item to local cart state
+        addItem(productWithStore);
+
+        toast({
+          description: `${product.name} added to cart!`,
+        });
+      } catch (error) {
+        console.error("Failed to add to cart:", error);
+        toast({
+          description: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Use local cart for non-authenticated users
+      addItem(productWithStore);
+      toast({
+        description: `${product.name} added to cart!`,
+      });
+    }
   };
 
   const filteredProducts =
@@ -85,7 +185,13 @@ const StorePage = () => {
 
           <section className="h-[220px] w-full hidden md:block bg-gray-300 rounded-xl">
             {vendorStoreData?.billboard ? (
-              <Image src={vendorStoreData?.billboard} alt="Billboard" width={500} height={250} className="w-full h-full object-cover rounded-xl"  />
+              <Image
+                src={vendorStoreData?.billboard}
+                alt="Billboard"
+                width={500}
+                height={250}
+                className="w-full h-full object-cover rounded-xl"
+              />
             ) : (
               <div className="h-full w-full bg-gray-200 rounded-xl flex items-center justify-center">
                 <span className="text-gray-400">No image</span>
@@ -98,7 +204,7 @@ const StorePage = () => {
             <div className="flex flex-row mt-2">
               <span className="pr-3 border-r-[1px]">
                 <p className="text-gray-400">Preparation Time</p>
-                <p>15-20 minutes</p>
+                <p>{vendorStoreData?.preparationTime}</p>
               </span>
               <span className="px-3 border-r-[1px]">
                 <p className="text-gray-400">Delivery Fee</p>
@@ -213,69 +319,74 @@ const StorePage = () => {
           <div className="mb-10">
             <h1 className="text-xl">Orders from {vendorStoreData?.name}</h1>
           </div>
-          <div className="flex flex-col justify-between h-full">
-            <div className="flow-root overflow-auto">
-              <ul className="-my-6 divide-y divide-gray-200">
-                {items
-                  .filter((item) => item.store?.id === storeId)
-                  .map((item: CartItemProps) => (
-                    <CartItem
-                      key={item.id}
-                      items={{
-                        ...item,
-                        onRemove: () => removeItem(item.id),
-                        onAdd: () => addItem(item),
-                      }}
-                    />
-                  ))}
-              </ul>
-            </div>
+          <div>
+            {toggleCartView === "cart" ? (
+              <div>
+                <div className="mb-4">
+                  <h3 className="text-2xl">My Cart</h3>
+                </div>
+                <CartPageComponents storeId={String(storeId)} />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <div className="flex flex-row items-center">
+                    <span className="mr-1">
+                      <ArrowLeft
+                        onClick={() => setToggleCartView("cart")}
+                        size={17}
+                      />
+                    </span>
+                    <span>
+                      <h3 className="text-2xl">Checkout</h3>
+                    </span>
+                  </div>
 
-            <div className="border-t border-gray-200 px-4 pt-2 sm:px-6 mb-4 text-sm">
-              <div className="flex justify-between text-base font-medium text-gray-900">
-                <p>Subtotal</p>
-                <p>
-                  ₦
-                  {formatNumberWithCommas(
-                    Number(
-                      items
-                        .filter((item) => item.store?.id === storeId)
-                        .reduce(
-                          (total, item) => total + item.price * item.quantity,
-                          0
-                        )
-                        .toFixed(2)
-                    )
-                  )}
-                </p>
-              </div>
-              <p className="mt-0.5 text-xs text-gray-500">
-                Shipping and taxes calculated at checkout.
-              </p>
-              <div className="mt-2">
-                <Link
-                  href="/checkout"
-                  className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-2 text-base font-medium text-white shadow-sm hover:bg-orange-600"
-                  // onClick={checkoutHandler}
-                >
-                  Checkout
-                </Link>
-              </div>
-              <div className="mt-2 flex justify-center text-center text-sm text-gray-500">
-                <p>
-                  or &nbsp;
-                  <Link href="/shop">
-                    <button
-                      type="button"
-                      className="font-medium text-orange-400 hover:text-orange-500"
+                  <div className="flex flex-row gap-3 pt-2">
+                    <span
+                      className="w-1/2 flex flex-col gap-2"
+                      onClick={() => {
+                        setToggleCheckoutView("order");
+                      }}
                     >
-                      Continue Shopping
-                      <span aria-hidden="true"> &rarr;</span>
-                    </button>
-                  </Link>
-                </p>
-              </div>
-            </div>
+                      <p>Your order</p>
+                      <div
+                        className={`w-full rounded-lg h-2.5 bg-primary`}
+                      ></div>
+                    </span>
+
+                    <span
+                      className="w-1/2 flex flex-col gap-2"
+                      onClick={() => {
+                        setToggleCheckoutView("payment");
+                      }}
+                    >
+                      Delivery & Payment
+                      <div
+                        className={`w-full rounded-lg h-2.5 ${
+                          toggleCheckoutView === "payment"
+                            ? "bg-primary"
+                            : "bg-gray-100"
+                        }`}
+                      ></div>
+                    </span>
+                  </div>
+                </div>
+                {toggleCheckoutView === "order" ? (
+                  <CheckoutOrderPage
+                    proceedToPayment={() => {
+                      setToggleCheckoutView("payment");
+                    }}
+                    // storeTotals={storeTotals}
+                    // typedCartData={typedCartData}
+                    // openStoreId={openStoreId}
+                    // setIsOpen={setIsOpen}
+                  />
+                ) : (
+                  <PaymentPage />
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
