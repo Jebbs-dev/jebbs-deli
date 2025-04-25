@@ -1,13 +1,15 @@
 import { Cart, User } from "@/types/types";
 import api from "@/utils/api";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import useAuthStore from "@/store/auth";
 
 export const useUpdateUser = (userId: string) => {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+
+  const queryClient =  useQueryClient()
 
 
   return useMutation({
@@ -19,6 +21,8 @@ export const useUpdateUser = (userId: string) => {
       if (data) {
         // Store tokens in localStorage
         router.push("/shop");
+
+        queryClient.invalidateQueries({queryKey: ["users"]})
 
         // Move the cart handling logic here
       }
