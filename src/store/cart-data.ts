@@ -10,6 +10,7 @@ import { User } from "@/types/types";
 
 interface CartViewState {
   isOpen: boolean;
+  isOrderHistoryOpen: boolean;
   toggleCartView: "cart" | "checkout";
   toggleCheckoutView: "order" | "payment";
   openStoreId: string | null;
@@ -19,6 +20,7 @@ interface CartViewState {
   cartTotal: number;
 
   setIsOpen: (open: boolean) => void;
+  setIsOrderHistoryOpen: (open: boolean) => void;
   setToggleCartView: (view: "cart" | "checkout") => void;
   setToggleCheckoutView: (view: "order" | "payment") => void;
   setOpenStoreId: (storeId: string | null) => void;
@@ -39,6 +41,7 @@ interface CartViewState {
 
 export const useCartViewStore = create<CartViewState>((set, get) => ({
   isOpen: false,
+  isOrderHistoryOpen: false,
   toggleCartView: "cart",
   toggleCheckoutView: "order",
   openStoreId: null,
@@ -48,11 +51,12 @@ export const useCartViewStore = create<CartViewState>((set, get) => ({
   cartTotal: 0,
 
   setIsOpen: (open) => set({ isOpen: open }),
+  setIsOrderHistoryOpen: (open) => set({ isOrderHistoryOpen: open }),
   setToggleCartView: (view) => set({ toggleCartView: view }),
   setToggleCheckoutView: (view) => set({ toggleCheckoutView: view }),
   setOpenStoreId: (storeId) => set({ openStoreId: storeId }),
-
   initializeCartData: (typedCartData, localItems, isLoggedIn) => {
+  
     const fetchedCartItems: CartItemProps[] =
       typedCartData?.cartGroups?.flatMap((group) =>
         group.cartItems.map((item) => {
@@ -79,6 +83,8 @@ export const useCartViewStore = create<CartViewState>((set, get) => ({
       ) ?? [];
 
     const cartItemsToUse = isLoggedIn ? fetchedCartItems : localItems;
+
+    console.log(localItems);
 
     const groupedByVendorStore = cartItemsToUse.reduce<
       Record<string, CartItemProps[]>
