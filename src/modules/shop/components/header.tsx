@@ -38,18 +38,26 @@ import {
 import PlacesAutocomplete from "@/components/map/places-autocomplete";
 import { useUpdateUser } from "@/modules/user/mutations/update-user";
 import { useFetchUserInformation } from "@/modules/user/queries/fetch-user-information";
+import OrderHistory from "@/modules/checkout/components/order-history";
+import { useAuthFormModal } from "@/store/auth-form-modal";
+import { useSheetStore } from "@/store/use-sheet";
+import { useQueryParamaters } from "@/store/use-query-parameters";
 
 export type Prediction = google.maps.places.AutocompletePrediction;
 
 const Header = () => {
-
-
   const [input, setInput] = useState("");
   const [predictions, setPredictions] = useState<Prediction[]>([]);
 
-  const { isOpen, setIsOpen } = useCartViewStore();
+  const { isOpen, setIsOpen, isOrderHistoryOpen, setIsOrderHistoryOpen } =
+    useCartViewStore();
+
+  const { querykey, setQueryKey } = useQueryParamaters();
+
+  // In your JSX
 
   const { user, isLoggedIn, logout } = useAuthStore();
+  const { onAuthFormOpen } = useAuthFormModal();
   const { data: userInformation } = useFetchUserInformation(String(user?.id));
 
   const { totalItems } = useCartStore();
@@ -64,11 +72,10 @@ const Header = () => {
       ?.flatMap((group) => group.cartItems)
       .reduce((sum, item) => sum + item.quantity, 0) || 0;
 
-  console.log("from header", input);
-
   return (
     <>
       <CartSheet />
+      <OrderHistory />
       <header className="border-b border-x-gray-100 fixed w-full left-0 z-50 bg-white">
         <div className="w-full bg-white flex justify-between h-[75px] md:h-[81px] px-4 md:px-10 mx-auto py-4">
           <div className="flex md:flex-row gap-10">
@@ -135,7 +142,12 @@ const Header = () => {
                   </svg>
                 </Button>
               </span>
-              <Input className="pl-10 w-80 py-2" />
+              <Input
+                className="pl-10 w-80 py-2"
+                onChange={(e) => {
+                  setQueryKey(e.target.value);
+                }}
+              />
             </div>
 
             <div className="flex items-center space-x-2">
@@ -143,7 +155,7 @@ const Header = () => {
                 className="relative bg-orange-400 flex items-center justify-center rounded-full w-[30px] h-[30px] md:w-[45px] md:h-[45px] text-white shadow-indigo-500/40"
                 aria-label="Cart"
                 onClick={() => {
-                  setIsOpen(true)
+                  setIsOpen(true);
                 }}
               >
                 <svg
@@ -200,7 +212,14 @@ const Header = () => {
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
-                    <DropdownMenuItem className="cursor-pointer">
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => {
+                        isLoggedIn
+                          ? setIsOrderHistoryOpen(true)
+                          : onAuthFormOpen();
+                      }}
+                    >
                       Order History
                       <DropdownMenuShortcut>
                         <FileClock size={18} />
@@ -262,7 +281,12 @@ const Header = () => {
                 </svg>
               </Button>
             </span>
-            <Input className="pl-10 w-80 py-2" />
+            <Input
+              className="pl-10 w-80 py-2"
+              onChange={(e) => {
+                setQueryKey(e.target.value);
+              }}
+            />
           </div>
         </div>
       </header>
