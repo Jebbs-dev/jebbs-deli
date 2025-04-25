@@ -35,8 +35,6 @@ const CartPageComponents = ({ storeId }: VendorPageProps) => {
 
   const {
     storeTotals,
-    typedCartData,
-    cartItemsToUse,
     openStoreId,
     setOpenStoreId,
     handleClearVendorItems,
@@ -54,10 +52,7 @@ const CartPageComponents = ({ storeId }: VendorPageProps) => {
     <div className="flex flex-col justify-between h-full mb-3">
       <div className="overflow-auto">
         {currentStore ? (
-          <div className="mb-6 border border-gray-200 p-6 rounded-xl">
-            <h3 className="font-medium text-lg">
-              {currentStore.vendorStoreName}
-            </h3>
+          <div className="mb-6 pb-6 rounded-xl">
             <ul className="divide-y divide-gray-200 transition">
               {currentStore.products.map((item) => (
                 <CartItem
