@@ -37,9 +37,11 @@ const CartPage = ({ goToCheckout }: CartProps) => {
     removeItem,
     clearCart,
     clearVendorItems,
+    items
   } = useCartStore();
 
   const {
+    setIsOpen,
     storeTotals,
     typedCartData,
     cartItemsToUse,
@@ -51,14 +53,6 @@ const CartPage = ({ goToCheckout }: CartProps) => {
   const { onAuthFormOpen } = useAuthFormModal();
 
   const { isLoggedIn, user } = useAuthStore();
-
-  const {data: orderData, isLoading: isOrderLoading} = useFetchOrders(String(user?.id));
-
-  if(isOrderLoading){
-    return <div>Loading</div>
-  }
-
-  console.log(orderData);
 
   return (
     <>
@@ -126,6 +120,7 @@ const CartPage = ({ goToCheckout }: CartProps) => {
                   asChild
                   onClick={() => {
                     if (!isLoggedIn) {
+                      setIsOpen(false);
                       onAuthFormOpen();
                     } else {
                       goToCheckout();
