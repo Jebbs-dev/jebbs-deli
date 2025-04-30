@@ -1,12 +1,16 @@
+import useAuthStore from "@/store/auth";
 import api from "@/utils/api";
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 
 export const useFetchUserInformation = (userId: string) => {
+  const { isLoggedIn } = useAuthStore();
   return useQuery({
     queryKey: ["users", userId],
-    queryFn: async () => {
-      const response = await api.get(`/users/${userId}`);
-      return response.data;
-    },
+    queryFn: isLoggedIn
+      ? async () => {
+          const response = await api.get(`/users/${userId}`);
+          return response.data;
+        }
+      : skipToken,
   });
 };
