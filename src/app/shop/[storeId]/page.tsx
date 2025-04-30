@@ -5,7 +5,7 @@ import CartItem from "@/modules/shop/cart/components/cart-item";
 import useCartStore, { CartItemProps } from "@/store/cart";
 import Image from "next/image";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import Link from "next/link";
 import { useFetchVendorStoreById } from "@/modules/shop/queries/fetch-vendor-store-by-id";
@@ -24,6 +24,9 @@ import CartPageComponents from "@/modules/shop/cart/components/cart-page-compone
 import CheckoutOrderPage from "@/modules/checkout/components/checkout-order-page";
 import PaymentPage from "@/modules/checkout/components/payment-page";
 import { useFetchCart } from "@/modules/shop/cart/queries/fetch-cart";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 
 const specializedTags = [
   "All",
@@ -45,7 +48,7 @@ const StorePage = () => {
 
   const { addItem, removeItem, clearCart, clearVendorItems } = useCartStore();
 
-  const { onAuthFormOpen } = useAuthFormModal();
+  const [show, setShow] = useState(false);
 
   const [selectedTag, setSelectedTag] = useState<string>("All");
 
@@ -73,6 +76,98 @@ const StorePage = () => {
   const { data: vendorStoreData, isPending } = useFetchVendorStoreById(
     String(storeId)
   );
+
+  const openingTime = vendorStoreData?.openingTime;
+  const closingTime = vendorStoreData?.closingTime;
+  
+  // Today's date
+  const today = new Date();
+  
+  // Helper function to parse "9:00 am" into today's date
+  const parseTimeToTodayDate = (timeString: string) => {
+    const [time, modifier] = timeString.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
+  
+    if (modifier.toLowerCase() === "pm" && hours !== 12) {
+      hours += 12;
+    }
+    if (modifier.toLowerCase() === "am" && hours === 12) {
+      hours = 0;
+    }
+  
+    const parsedDate = new Date();
+    parsedDate.setHours(hours);
+    parsedDate.setMinutes(minutes);
+    parsedDate.setSeconds(0);
+    parsedDate.setMilliseconds(0);
+  
+    return parsedDate;
+  };
+  
+  // Only parse if times are available
+  const parsedOpeningDate = openingTime ? parseTimeToTodayDate(openingTime) : null;
+  const parsedClosingDate = closingTime ? parseTimeToTodayDate(closingTime) : null;
+  
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+  
+  useEffect(() => {
+    if (!parsedOpeningDate || !parsedClosingDate) return;
+  
+    const TIMEZONE = "Africa/Lagos";
+  
+    const now = dayjs().tz(TIMEZONE);
+  
+    // Create Dayjs objects from already parsed Dates
+    const opening = dayjs(parsedOpeningDate).tz(TIMEZONE);
+    const closing = dayjs(parsedClosingDate).tz(TIMEZONE);
+  
+    const storeOpeningTime = now
+      .set("hour", opening.hour())
+      .set("minute", opening.minute())
+      .set("second", 0)
+      .set("millisecond", 0);
+
+    console.log(storeOpeningTime);
+  
+    const storeClosingTime = now
+      .set("hour", closing.hour())
+      .set("minute", closing.minute())
+      .set("second", 0)
+      .set("millisecond", 0);
+  
+    if (now.isAfter(storeOpeningTime) && now.isBefore(storeClosingTime)) {
+      setShow(true);
+    } else {
+      setShow(false);
+    }
+  
+    const msUntilOpening = storeOpeningTime.diff(now);
+    const msUntilClosing = storeClosingTime.diff(now);
+  
+    const timers: NodeJS.Timeout[] = [];
+  
+    if (msUntilOpening > 0) {
+      timers.push(
+        setTimeout(() => {
+          setShow(true);
+        }, msUntilOpening)
+      );
+    }
+  
+    if (msUntilClosing > 0) {
+      timers.push(
+        setTimeout(() => {
+          setShow(false);
+        }, msUntilClosing)
+      );
+    }
+  
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [parsedOpeningDate, parsedClosingDate]);
+
   // const { data: products, isPending } = useFetchProductsBystore(String(storeId));
 
   // const localStorageCart = JSON.parse(
@@ -185,13 +280,32 @@ const StorePage = () => {
 
           <section className="h-[220px] w-full hidden md:block bg-gray-300 rounded-xl">
             {vendorStoreData?.billboard ? (
-              <Image
-                src={vendorStoreData?.billboard}
-                alt="Billboard"
-                width={500}
-                height={250}
-                className="w-full h-full object-cover rounded-xl"
-              />
+              show ? (
+                <Image
+                  src={vendorStoreData?.billboard}
+                  alt="Billboard"
+                  width={500}
+                  height={250}
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              ) : (
+                <div className="relative h-full w-full rounded-xl overflow-hidden bg-black bg-opacity-70">
+                  <div
+                    className="absolute inset-0 "
+                    style={{
+                      backgroundImage: `url(${vendorStoreData?.billboard})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      opacity: 0.5,
+                    }}
+                  />
+                  <div className="relative z-10 flex h-full w-full items-center justify-center">
+                    <span className="text-white text-2xl font-semibold">
+                      Store is Closed
+                    </span>
+                  </div>
+                </div>
+              )
             ) : (
               <div className="h-full w-full bg-gray-200 rounded-xl flex items-center justify-center">
                 <span className="text-gray-400">No image</span>
@@ -217,7 +331,7 @@ const StorePage = () => {
             </div>
 
             <div className="flex flex-row overflow-auto gap-2 break w-full mt-5">
-              {specializedTags.map((tag) => (
+              {vendorStoreData?.tags.map((tag: any) => (
                 <span
                   key={tag}
                   className={`min-w-20 rounded-md cursor-pointer text-orange-400 ${
@@ -316,15 +430,12 @@ const StorePage = () => {
         </div>
 
         <div className="w-[37%] border-l-2 px-4 hidden md:block overflow-scroll h-screen">
-          <div className="mb-10">
+          <div className="">
             <h1 className="text-xl">Orders from {vendorStoreData?.name}</h1>
           </div>
           <div>
             {toggleCartView === "cart" ? (
-              <div>
-                <div className="mb-4">
-                  <h3 className="text-2xl">My Cart</h3>
-                </div>
+              <div className="h-[100vh]">
                 <CartPageComponents storeId={String(storeId)} />
               </div>
             ) : (
