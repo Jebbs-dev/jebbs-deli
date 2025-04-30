@@ -1,12 +1,17 @@
+import useAuthStore from "@/store/auth";
 import api from "@/utils/api";
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 
 export const useFetchCart = (userId: string) => {
+  const { isLoggedIn } = useAuthStore();
+
   return useQuery({
     queryKey: ["cart", userId],
-    queryFn: async () => {
-      const response = await api.get(`/cart/${userId}`);
-      return response.data;
-    },
+    queryFn: isLoggedIn
+      ? async () => {
+          const response = await api.get(`/cart/${userId}`);
+          return response.data;
+        }
+      : skipToken,
   });
 };
