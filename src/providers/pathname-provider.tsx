@@ -1,9 +1,9 @@
 "use client";
 
-import { Footer } from "@/components/footer/footer";
 import Faqs from "@/modules/landing/faqs";
 import Navigation from "@/modules/landing/navigation";
 import Reservation from "@/modules/landing/reservation/reservation";
+import Footer from "@/modules/shop/components/footer";
 import { usePathname } from "next/navigation";
 
 interface PathnameProviderProps {
