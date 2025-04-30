@@ -36,11 +36,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import PlacesAutocomplete from "@/components/map/places-autocomplete";
-import { useUpdateUser } from "@/modules/user/mutations/update-user";
 import { useFetchUserInformation } from "@/modules/user/queries/fetch-user-information";
 import OrderHistory from "@/modules/checkout/components/order-history";
 import { useAuthFormModal } from "@/store/auth-form-modal";
-import { useSheetStore } from "@/store/use-sheet";
 import { useQueryParamaters } from "@/store/use-query-parameters";
 
 export type Prediction = google.maps.places.AutocompletePrediction;
@@ -49,8 +47,10 @@ const Header = () => {
   const [input, setInput] = useState("");
   const [predictions, setPredictions] = useState<Prediction[]>([]);
 
-  const { isOpen, setIsOpen, isOrderHistoryOpen, setIsOrderHistoryOpen } =
+  const { setIsOpen, setIsOrderHistoryOpen } =
     useCartViewStore();
+
+  const [dropdownOpen, setIsDropdownOpen] = useState(false);
 
   const { querykey, setQueryKey } = useQueryParamaters();
 
@@ -85,7 +85,8 @@ const Header = () => {
               </h1>
             </Link>
 
-            <Dialog>
+            <Dialog
+            >
               <DialogTrigger className="flex flex-row items-center gap-2">
                 <MapPin className="text-green-600" size={18} />
                 <p className="text-sm">{userInformation?.address} </p>
@@ -178,11 +179,15 @@ const Header = () => {
                 )}
               </Button>
 
-              <DropdownMenu>
+              <DropdownMenu
+                open={dropdownOpen}
+                onOpenChange={() => setIsDropdownOpen(false)}
+              >
                 <DropdownMenuTrigger asChild>
                   <Button
                     className="relative bg-orange-400 flex items-center justify-center rounded-full w-[30px] h-[30px] md:w-[45px] md:h-[45px] shadow-indigo-500/40"
                     aria-label="User Icon"
+                    onClick={() => setIsDropdownOpen(true)}
                   >
                     <svg
                       width="22"
@@ -215,6 +220,7 @@ const Header = () => {
                     <DropdownMenuItem
                       className="cursor-pointer"
                       onClick={() => {
+                        setIsDropdownOpen(false);
                         isLoggedIn
                           ? setIsOrderHistoryOpen(true)
                           : onAuthFormOpen();
