@@ -10,10 +10,14 @@ import { formatNumberWithCommas } from "@/utils/formatNumber";
 import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 import useAuthStore from "@/store/auth";
 import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
 import { useFetchCart } from "@/modules/shop/cart/queries/fetch-cart";
+import OrderHistory from "@/modules/checkout/components/order-history";
+import { useQueryParamaters } from "@/store/use-query-parameters";
+import { useFetchFilteredProduct } from "@/modules/shop/queries/fetch-filtered-products";
+import { useDebounce } from "@/hooks/use-debounce";
 // Skeleton component for loading state
 const ProductSkeleton = () => {
   return (
@@ -30,11 +34,18 @@ const ProductSkeleton = () => {
 };
 
 const Shop = () => {
-  const { toast } = useToast()
-    const { isLoggedIn, user } = useAuthStore();
-    const { data: products, isLoading, isFetching } = useFetchProduct();
-    const { mutateAsync: updateCart, isPending } = useUpdateCart();
-    const { data: cartData } = useFetchCart(user?.id ? String(user.id) : "");
+  const { toast } = useToast();
+  const { isLoggedIn, user } = useAuthStore();
+  const { querykey } = useQueryParamaters();
+
+  const debouncedQuery = useDebounce(querykey, 1000);
+
+  const { data: products, isLoading } = useFetchFilteredProduct({
+    name: debouncedQuery,
+    isFeatured: true,
+  });
+  const { mutateAsync: updateCart, isPending } = useUpdateCart();
+  const { data: cartData } = useFetchCart(user?.id ? String(user.id) : "");
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectProduct, setSelectProduct] = useState<Product | null>(null);
@@ -44,11 +55,11 @@ const Shop = () => {
 
   // Filter products based on selected category
   const filteredProducts = selectedCategory
-    ? products?.filter(
+    ? products?.products?.filter(
         (product: any) =>
           product.category?.toLowerCase() === selectedCategory.toLowerCase()
       )
-    : products;
+    : products?.products;
 
   // Handle category button click
   const handleCategoryClick = (categoryName: string) => {
@@ -82,7 +93,7 @@ const Shop = () => {
         );
 
         let updatedCartItems;
-        
+
         if (existingItemIndex !== -1) {
           // Increase quantity of existing item
           updatedCartItems = [...existingCartItems];
@@ -100,7 +111,7 @@ const Shop = () => {
 
         // Calculate new total price
         const newTotalPrice = updatedCartItems.reduce(
-          (sum, item) => sum + (item.price * item.quantity), 
+          (sum, item) => sum + item.price * item.quantity,
           0
         );
 
@@ -134,7 +145,7 @@ const Shop = () => {
   // Create an array of 8 items for skeleton loading
   const skeletonArray = Array(8).fill(null);
 
-  const selectedProduct = products?.find(
+  const selectedProduct = products?.products?.find(
     (product: Product) => product.id === selectProduct?.id
   );
 
@@ -203,7 +214,7 @@ const Shop = () => {
             ) : filteredProducts && filteredProducts.length > 0 ? (
               // Actual products
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                {filteredProducts.map((product: any) => (
+                {filteredProducts?.map((product: any) => (
                   <div
                     className="p-4 bg-white rounded-lg shadow-sm flex flex-col h-full"
                     key={product.id}
@@ -277,7 +288,7 @@ const Shop = () => {
                   <div className="text-gray-400">
                     {selectedCategory
                       ? `No products found in the ${selectedCategory} category`
-                      : !isFetching && (
+                      : !isLoading && (
                           <div className="text-center py-10 ">
                             <Image
                               src="/svgs/Search.svg"
