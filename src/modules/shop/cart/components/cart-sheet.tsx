@@ -24,7 +24,6 @@ import { useFetchCart } from "../queries/fetch-cart";
 import CheckoutPage from "@/modules/checkout/components/checkout-page";
 import CartPage from "./cart-page";
 import { useCartViewStore } from "@/store/cart-data";
-import { useSheetStore } from "@/store/use-sheet";
 
 interface CartProps {
   isOpen: boolean;
@@ -80,15 +79,7 @@ const CartSheet = () => {
   const { mutateAsync: updateCart } = useUpdateCart();
   const { mutateAsync: removeCart } = useRemoveFromCart();
 
-  const { data: fetchedCartData, isLoading } = useFetchCart(
-    user?.id ? String(user.id) : ""
-  );
-
-  useEffect(() => {
-    // if (fetchedCartData) {
-    initializeCartData(fetchedCartData, items, isLoggedIn);
-    // }
-  }, [fetchedCartData, items, isLoggedIn]);
+  const { data: fetchedCartData, isLoading } = useFetchCart(String(user?.id));
 
   // Effect to sync local cart to backend when user logs in
   useEffect(() => {
@@ -123,6 +114,12 @@ const CartSheet = () => {
     }
   }, [addCart, isLoggedIn, totalAmount, user, items, clearCart]);
 
+  useEffect(() => {
+    if (fetchedCartData || items) {
+      initializeCartData(fetchedCartData, items, isLoggedIn);
+    }
+  }, [fetchedCartData, items, isLoggedIn]);
+
   const {
     isOpen,
     setIsOpen,
@@ -131,7 +128,7 @@ const CartSheet = () => {
     setToggleCartView,
     cartItemsToUse,
   } = useCartViewStore();
-  
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
