@@ -13,9 +13,9 @@ export const HeroSection = () => {
         <div className="grid md:auto-cols-fr gap-5 items-center md:grid-cols-2">
           <motion.div
             className="flex flex-col py-5"
-            initial={{ opacity: 0, y: 40 }} // Start invisible and slightly below
+            initial={{ opacity: 0, y: 0 }} // Start invisible and slightly below
             animate={{ opacity: 1, y: 0 }} // Fade in and move up
-            transition={{ duration: 0.3, ease: "easeIn" }} // Smooth transition
+            transition={{ duration: 0.5, ease: "easeIn" }} // Smooth transition
           >
             <h1 className="font-bold text-4xl md:text-6xl leading-10 md:leading-[65px] text-hair font-sans py-3">
               Discover a World of Flavors at Your Fingertips
@@ -38,12 +38,20 @@ export const HeroSection = () => {
             </div>
           </motion.div>
 
-          <div className="">
-            <img
+          <motion.div
+            className=""
+            initial={{ opacity: 0, y: 0 }} // Start invisible and slightly below
+            animate={{ opacity: 1, y: 0 }} // Fade in and move up
+            transition={{ duration: 0.1, ease: "easeIn" }}
+          >
+            <Image
               src="/images/HeroImage.png"
               alt="Woman eating fruits"
+              height={500}
+              width={500}
+              className="h-auto w-auto"
             />
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

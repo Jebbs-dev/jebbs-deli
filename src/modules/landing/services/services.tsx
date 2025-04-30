@@ -1,10 +1,7 @@
 "use client";
 
-import React, { useContext, useState } from "react";
-import CartContext from "@/providers/cart/cart-context";
-import FaveContext from "@/providers/favourites/favourites-context";
-import { IMeals, Meals } from "@/modules/landing/services/data/meals";
-import { FaAngleLeft, FaAngleRight, FaHeart } from "react-icons/fa6";
+import React, {  useState } from "react";
+
 import Image from "next/image";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -23,37 +20,9 @@ export const Services = () => {
     }
   };
 
-  const cartCtx = useContext(CartContext);
-  const faveCtx = useContext(FaveContext);
-
   const [mealQuantity, setMealQuantity] = useState(1);
 
   const [tabValue, setTabValue] = useState("customers");
-
-  const addToCartHandler = (meal: IMeals) => {
-    cartCtx.addItem({
-      id: meal.id,
-      name: meal.name,
-      quantity: mealQuantity,
-      category: meal.category,
-      price: meal.price,
-      image: meal.image,
-    });
-
-    console.log(cartCtx.items);
-  };
-
-  const addToFaveHandler = (meal: IMeals) => {
-    faveCtx.addItem({
-      id: meal.id,
-      name: meal.name,
-      category: meal.category,
-      price: meal.price,
-      description: meal.description,
-      image: meal.image,
-      addToCartHandler: undefined,
-    });
-  };
 
   return (
     <div className="w-full bg-orange-50" id="services">

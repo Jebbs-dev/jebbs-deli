@@ -1,8 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
-import CartProvider from "@/providers/cart/cart-provider";
-import FaveProvider from "@/providers/favourites/favourites-provider";
 
 import PathnameProvider from "@/providers/pathname-provider";
 import { QueryProvider } from "@/providers/query-client-provider";
@@ -24,13 +22,9 @@ export default function RootLayout({
     <QueryProvider>
       <html lang="en">
         <body className={`${GeistSans.className} antialiased`}>
-          <CartProvider>
-            <FaveProvider>
-              <PathnameProvider>
-                <TokenRefreshProvider>{children}</TokenRefreshProvider>
-              </PathnameProvider>
-            </FaveProvider>
-          </CartProvider>
+          <PathnameProvider>
+            <TokenRefreshProvider>{children}</TokenRefreshProvider>
+          </PathnameProvider>
         </body>
       </html>
     </QueryProvider>

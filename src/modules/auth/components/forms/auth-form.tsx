@@ -16,6 +16,7 @@ import { useLoginUser } from "../../mutations/login";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateUser } from "../../mutations/register";
 import { useAuthFormModal } from "@/store/auth-form-modal";
+import { useRouter } from "next/navigation";
 
 interface AuthFormProps {
   variant: string;
@@ -37,6 +38,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
   const { mutateAsync: registerUser } = useCreateUser();
   const { toast } = useToast();
   const { onAuthFormClose } = useAuthFormModal();
+  const router =  useRouter();
 
   const formSchema = z.object({
     name: z
@@ -77,6 +79,8 @@ const AuthForm = ({ variant }: AuthFormProps) => {
         title: "Success",
         description: "Logged in successfully!",
       });
+      // window.location.reload()
+      // router.push("/shop")
     } catch (error) {
       toast({
         variant: "destructive",
@@ -106,6 +110,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
         title: "Success",
         description: "User created successfully!",
       });
+      router.push("/auth")
     } catch (error) {
       toast({
         variant: "destructive",
