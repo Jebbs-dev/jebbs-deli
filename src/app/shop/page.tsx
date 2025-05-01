@@ -43,6 +43,7 @@ const Shop = () => {
   const { data: products, isLoading } = useFetchFilteredProduct({
     name: debouncedQuery,
     isFeatured: true,
+    limit: 16,
   });
   const { mutateAsync: updateCart, isPending } = useUpdateCart();
   const { data: cartData } = useFetchCart(user?.id ? String(user.id) : "");

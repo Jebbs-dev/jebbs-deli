@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 type ProductParams = {
   name?: string;
   isFeatured?: boolean;
-  [key: string]: string | boolean | undefined;
+  limit?: number;
+  [key: string]: string | boolean | number | undefined;
 };
 
 export const useFetchFilteredProduct = (params: ProductParams) => {
