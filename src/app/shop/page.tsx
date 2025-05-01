@@ -41,7 +41,7 @@ const Shop = () => {
   const debouncedQuery = useDebounce(querykey, 1000);
 
   const { data: products, isLoading } = useFetchFilteredProduct({
-    name: debouncedQuery,
+    search: debouncedQuery,
     isFeatured: true,
     limit: 16,
   });

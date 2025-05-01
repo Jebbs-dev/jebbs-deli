@@ -2,7 +2,7 @@ import api from "@/utils/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type ProductParams = {
-  name?: string;
+  search?: string;
   isFeatured?: boolean;
   limit?: number;
   [key: string]: string | boolean | number | undefined;
