@@ -36,7 +36,7 @@ const refreshAuthToken = async () => {
     }
 
     const refreshResponse = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/refresh`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`,
       { refreshToken: userInfo.refreshToken }
     );
 
@@ -57,7 +57,7 @@ const refreshAuthToken = async () => {
 };
 
 const api = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`,
+  baseURL: `${process.env.NEXT_PUBLIC_API_BASE_URL}`,
   timeout: 10000, // Set a reasonable timeout
   headers: {
     "Content-Type": "application/json",
