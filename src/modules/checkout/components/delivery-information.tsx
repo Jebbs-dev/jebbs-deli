@@ -16,6 +16,8 @@ import React from "react";
 import { useCreateOrder } from "@/modules/checkout/mutations/create-order";
 import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
 import useAuthStore from "@/store/auth";
+import { FaSpinner } from "react-icons/fa";
+import { useToast } from "@/hooks/use-toast";
 
 interface DeliveryInformationProps {
   thresholdInKm: number;
@@ -36,7 +38,9 @@ const DeliveryInformation = ({
 }: DeliveryInformationProps) => {
   const { storeTotals, cartTotal, typedCartData } = useCartViewStore();
 
-  const { mutateAsync: createOrder } = useCreateOrder();
+  const { mutateAsync: createOrder, isPending } = useCreateOrder();
+
+  const { toast } = useToast();
 
   const { mutateAsync: updateCart } = useUpdateCart();
 
@@ -78,10 +82,17 @@ const DeliveryInformation = ({
         totalPrice: 0,
       });
 
-      // Handle success (e.g., show a success message, redirect, etc.)
-    } catch (error) {
+      toast({
+        title: "Success",
+        description: "Order created successfully!",
+      });
+    } catch (error: any) {
       console.error("Order creation failed:", error);
-      // Handle error (e.g., show an error message)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
     }
   };
 
@@ -211,7 +222,17 @@ const DeliveryInformation = ({
       <div className="mt-4 flex flex-col gap-4">
         <Button asChild onClick={handlePlaceOrder}>
           <span className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600">
-            Place Order
+          {isPending ? (
+              <>
+                Creating Order
+                <span className="ml-2 text-sm">
+                  <FaSpinner className="animate-spin" />
+                </span>
+              </>
+            ) : (
+              <> Place Ordern </>
+            )}
+           
           </span>
         </Button>
         <Button className="w-full bg-red-100 px-6 py-3 text-red-500 text-sm hover:bg-red-200">
