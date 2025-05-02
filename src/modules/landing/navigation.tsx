@@ -5,6 +5,7 @@ import { ModeToggle } from "@/components/global/mode-toggle";
 import PhoneCall from "../../../public/gifs/icons8-phone-ringing.gif";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 const Navigation = () => {
   const [scrollNav, setScrollNav] = useState(false);
@@ -82,11 +83,11 @@ const Navigation = () => {
           </Link>
         </ul>
       </nav>
-      <aside className="flex items-center gap-2">
+      <aside className="flex items-center gap-4">
         <Link
           href="/shop"
           className="relative bg-orange-400 flex items-center justify-center rounded-full w-[30px] h-[30px] md:w-[45px] md:h-[45px] text-white shadow-indigo-500/40"
-          >
+        >
           <svg
             stroke="currentColor"
             fill="currentColor"
@@ -101,7 +102,15 @@ const Navigation = () => {
             <circle cx="17.5" cy="19.5" r="1.5"></circle>
           </svg>
         </Link>
-        {/* <UserButton /> */}
+
+        <Link
+          href="https://jebbs-deli-admin.vercel.app/auth/vendor"
+          target="_blank"
+          className="flex items-center justify-center text-white h-[30px] md:h-[45px] rounded-full bg-green-700 text-sm md:text-base px-3  md:py-0"
+        >
+          Vendors
+        </Link>
+
         <ModeToggle />
       </aside>
     </div>
