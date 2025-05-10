@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateUser } from "../../mutations/register";
 import { useAuthFormModal } from "@/store/auth-form-modal";
 import { useRouter } from "next/navigation";
+import { FaSpinner } from "react-icons/fa6";
 
 interface AuthFormProps {
   variant: string;
@@ -34,11 +35,19 @@ const loginDefaultValues = {
 };
 
 const AuthForm = ({ variant }: AuthFormProps) => {
-  const { mutateAsync: loginUser } = useLoginUser();
-  const { mutateAsync: registerUser } = useCreateUser();
+  const {
+    mutateAsync: loginUser,
+    isPending: isLoginPending,
+    isSuccess: isLoginSuccess,
+  } = useLoginUser();
+  const {
+    mutateAsync: registerUser,
+    isPending: isSignupPending,
+    isSuccess: isSignupSuccess,
+  } = useCreateUser();
   const { toast } = useToast();
   const { onAuthFormClose } = useAuthFormModal();
-  const router =  useRouter();
+  const router = useRouter();
 
   const formSchema = z.object({
     name: z
@@ -110,7 +119,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
         title: "Success",
         description: "User created successfully!",
       });
-      router.push("/auth")
+      router.push("/auth");
     } catch (error) {
       toast({
         variant: "destructive",
@@ -186,10 +195,21 @@ const AuthForm = ({ variant }: AuthFormProps) => {
             disabled={form.formState.isSubmitting}
             className="bg-primary w-full hover:bg-orange-600 disabled:bg-gray-400"
             onClick={() => {
-              onAuthFormClose();
+              form.formState.isSubmitted &&
+                (isLoginSuccess || isSignupSuccess) &&
+                onAuthFormClose();
             }}
           >
-            Submit
+            {isLoginPending || isSignupPending ? (
+              <>
+                Submitting
+                <span className="ml-2 text-sm">
+                  <FaSpinner className="animate-spin" />
+                </span>
+              </>
+            ) : (
+              "Submit"
+            )}
           </Button>
         </form>
       </Form>
