@@ -271,7 +271,7 @@ const Shop = () => {
                           )}
                         </span>
                         <button
-                          className="px-3 py-1 bg-amber-100 text-amber-800 rounded-md text-sm hover:bg-amber-200 transition-colors"
+                          className="px-3 py-1 bg-amber-100 text-amber-800 rounded-md text-sm hover:bg-amber-200 transition-colors cursor-pointer"
                           onClick={() => handleAddToCart(product)}
                           disabled={isPending}
                         >

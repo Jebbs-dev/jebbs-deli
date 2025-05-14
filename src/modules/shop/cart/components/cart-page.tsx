@@ -32,13 +32,8 @@ interface CartProps {
 const CartPage = ({ goToCheckout }: CartProps) => {
   const { mutateAsync: updateCart } = useUpdateCart();
 
-  const {
-    addItem,
-    removeItem,
-    clearCart,
-    clearVendorItems,
-    items
-  } = useCartStore();
+  const { addItem, removeItem, clearCart, clearVendorItems, items } =
+    useCartStore();
 
   const {
     setIsOpen,
@@ -117,26 +112,20 @@ const CartPage = ({ goToCheckout }: CartProps) => {
               )}
               <div className="mt-4 flex flex-col gap-4">
                 <Button
-                  asChild
+                  className="bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600"
                   onClick={() => {
                     if (!isLoggedIn) {
                       setIsOpen(false);
                       onAuthFormOpen();
                     } else {
                       goToCheckout();
+                      setOpenStoreId(
+                        openStoreId === store.storeId ? null : store.storeId
+                      );
                     }
                   }}
                 >
-                  <span
-                    className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600"
-                    onClick={() =>
-                      setOpenStoreId(
-                        openStoreId === store.storeId ? null : store.storeId
-                      )
-                    }
-                  >
-                    Proceed to checkout
-                  </span>
+                  Proceed to checkout
                 </Button>
                 <Button
                   className="w-full bg-red-100 px-6 py-3 text-red-500 text-sm hover:bg-red-200"

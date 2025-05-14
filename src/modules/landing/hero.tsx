@@ -29,7 +29,7 @@ export const HeroSection = () => {
                 <Link href="/shop">
                   <button
                     type="button"
-                    className="rounded-md w-full px-4 py-2 text-white border-solid border-[1px] bg-orange-400 border-orange-400 hover:bg-orange-500 hover:border-orange-500"
+                    className="rounded-md w-full px-4 py-2 text-white border-solid border-[1px] bg-orange-400 border-orange-400 hover:bg-orange-500 hover:border-orange-500 cursor-pointer"
                   >
                     Make an order
                   </button>

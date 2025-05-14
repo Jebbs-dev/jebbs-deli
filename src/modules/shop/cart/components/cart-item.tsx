@@ -184,14 +184,14 @@ const CartItem = ({ items }: CartItemComponentProps) => {
           <div className="flex items-center gap-2 bg-orange-50 rounded-full px-2">
             <button
               onClick={handleRemove}
-              className="font-medium text-orange-400 hover:text-orange-500 w-8 h-8 rounded-full text-base"
+              className="font-medium text-orange-400 hover:text-orange-500 w-8 h-8 rounded-full text-base cursor-pointer"
             >
               -
             </button>
             <p className="text-gray-500">Qty {items.quantity}</p>
             <button
               onClick={handleAdd}
-              className="font-medium text-orange-400 hover:text-orange-500 w-8 h-8 rounded-full text-base"
+              className="font-medium text-orange-400 hover:text-orange-500 w-8 h-8 rounded-full text-base cursor-pointer"
             >
               +
             </button>
