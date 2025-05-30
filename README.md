@@ -16,7 +16,6 @@ Jebbs Deli is a modern food delivery platform built with Next.js 14. It provides
 - **Icons**:Lucide React, React Icons
 - **Maps**: Google Maps API
 - **Type Safety**: TypeScript
-- **Testing**: Jest, React Testing Library
 
 ## Prerequisites
 - Node.js (v18 or higher)
@@ -83,7 +82,6 @@ jebbs-deli/
 - Interactive animations with Framer Motion
 - Advanced state management
 - Type-safe development
-- Comprehensive test suite
 
 ## Third-Party Libraries
 - **@radix-ui/react-***: Accessible UI components
@@ -99,18 +97,7 @@ jebbs-deli/
 - TypeScript is strictly enforced
 - ESLint is configured for code quality
 - Tailwind CSS is used with a custom configuration
-- Jest and React Testing Library are set up for testing
 - Modern ESLint configuration
-
-## Testing
-The project includes a comprehensive test suite:
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-```
 
 ## Deployment
 The application can be deployed on Vercel or any other platform that supports Next.js applications. Make sure to:
