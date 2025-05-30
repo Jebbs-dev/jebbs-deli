@@ -1,36 +1,131 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Jebbs Deli
 
-## Getting Started
+## Author
+**Fulness Ojebiyi**
 
-First, run the development server:
+## Overview
+Jebbs Deli is a modern food delivery platform built with Next.js 14. It provides a seamless experience for customers to order meals from their favorite restaurants. The application features a beautiful, responsive UI with real-time order tracking, location-based services, and an intuitive user interface.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Tech Stack
+- **Framework**: Next.js 14
+- **Styling**: Tailwind CSS
+- **State Management**: Zustand
+- **UI Components**: Shadcn UI (Radix UI)
+- **Data Fetching**: TanStack Query
+- **Animation**: Framer Motion
+- **Icons**:Lucide React, React Icons
+- **Maps**: Google Maps API
+- **Type Safety**: TypeScript
+- **Testing**: Jest, React Testing Library
+
+## Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- Google Maps API key
+
+## Local Development Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone [repository-url]
+   cd jebbs-deli
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Environment Variables Setup**
+   Create a `.env.local` file in the root directory with the following variables:
+   ```
+   # API Configuration
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:3000 || https://your-production-domain.com
+   
+   # Google Maps Configuration
+   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+   ```
+
+4. **Run the development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## Project Structure
+```
+jebbs-deli/
+├── src/
+│   ├── app/          # Next.js app directory and page components
+│   ├── components/   # Reusable UI components
+│   ├── hooks/        # Custom React hooks
+│   ├── lib/          # Utility functions and configurations
+│   ├── modules/      # Feature-specific modules
+│   ├── providers/    # React context providers
+│   ├── store/        # Zustand state management
+│   ├── styles/       # Global styles and Tailwind config
+│   ├── types/        # TypeScript type definitions
+│   ├── utils/        # Helper functions and utilities
+├── public/           # Static assets
+└── ...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Features
+- Location-based restaurant discovery
+- Real-time order tracking
+- Interactive maps integration
+- Responsive and modern UI design
+- Interactive animations with Framer Motion
+- Advanced state management
+- Type-safe development
+- Comprehensive test suite
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Third-Party Libraries
+- **@radix-ui/react-***: Accessible UI components
+- **framer-motion**: Animation library
+- **react-icons**: Icon library
+- **zustand**: State management
+- **class-variance-authority**: Component styling utilities
+- **tailwind-merge**: Tailwind CSS class merging
+- **tailwindcss-animate**: Animation utilities
+- **@react-google-maps/api**: Google Maps integration
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Development Notes
+- TypeScript is strictly enforced
+- ESLint is configured for code quality
+- Tailwind CSS is used with a custom configuration
+- Jest and React Testing Library are set up for testing
+- Modern ESLint configuration
 
-## Learn More
+## Testing
+The project includes a comprehensive test suite:
+```bash
+# Run all tests
+npm test
 
-To learn more about Next.js, take a look at the following resources:
+# Run tests in watch mode
+npm run test:watch
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
+The application can be deployed on Vercel or any other platform that supports Next.js applications. Make sure to:
+1. Set up all environment variables in your deployment platform
+2. Configure the Google Maps API key for production
+3. Update any API endpoints to production URLs
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Contributing
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-## Deploy on Vercel
+## License
+Copyright (c) 2025 Fulness Ojebiyi
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+All rights reserved.
