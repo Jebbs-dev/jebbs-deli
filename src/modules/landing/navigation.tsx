@@ -104,7 +104,7 @@ const Navigation = () => {
         </Link>
 
         <Link
-          href="https://jebbs-deli-admin.vercel.app/auth/vendor"
+          href="https://jebbs-deli-admin.vercel.app/auth"
           target="_blank"
           className="flex items-center justify-center text-white h-[30px] md:h-[45px] rounded-full bg-green-700 text-sm md:text-base px-3  md:py-0"
         >
