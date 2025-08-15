@@ -18,12 +18,6 @@ const PaymentLinkModal = () => {
 
   const { isPending: isPaymentInitialisationPending } = useInitialisePayment();
 
-  if (isPaymentInitialisationPending) {
-    setPaymentlinkModalOpen(true);
-  }
-
-  console.log(paymentPayload?.authorization_url);
-
   return (
     <Dialog open={paymentLinkModalOpen} onOpenChange={setPaymentlinkModalOpen}>
       <DialogContent>
