@@ -5,6 +5,8 @@ import { Banknote, Bike, CircleAlert } from "lucide-react";
 import React from "react";
 import { useCreateOrder } from "../mutations/create-order";
 import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
+import { FaSpinner } from "react-icons/fa6";
+import { useToast } from "@/hooks/use-toast";
 
 interface PickupInformationProps {
   thresholdInKm: number;
@@ -22,11 +24,16 @@ const PickupInformation = ({
   storeAddress,
   userAddress,
 }: PickupInformationProps) => {
-  const { storeTotals, cartTotal, typedCartData } = useCartViewStore();
+  const { storeTotals, cartTotal, typedCartData, setIsOpen } =
+    useCartViewStore();
 
-  const { mutateAsync: createOrder } = useCreateOrder();
+  const { mutateAsync: createOrder, isPending: isOrderCreationPending } =
+    useCreateOrder();
 
-  const { mutateAsync: updateCart } = useUpdateCart();
+  const { mutateAsync: updateCart, isPending: isCartUpdatePending } =
+    useUpdateCart();
+
+  const { toast } = useToast();
 
   const serviceFee = 0.1 * cartTotal;
   const totalOrderCost = serviceFee + cartTotal;
@@ -63,10 +70,19 @@ const PickupInformation = ({
         totalPrice: 0,
       });
 
-      // Handle success (e.g., show a success message, redirect, etc.)
-    } catch (error) {
+      setIsOpen(false);
+
+      toast({
+        title: "Success",
+        description: "Order created successfully!",
+      });
+    } catch (error: any) {
       console.error("Order creation failed:", error);
-      // Handle error (e.g., show an error message)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
     }
   };
 
@@ -134,9 +150,18 @@ const PickupInformation = ({
         </span>
       </div>
       <div className="mt-4 flex flex-col gap-4">
-        <Button asChild>
+        <Button asChild onClick={handlePlaceOrder}>
           <span className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600">
-            Place Order
+            {isOrderCreationPending || isCartUpdatePending ? (
+              <>
+                Creating Order
+                <span className="ml-2 text-sm">
+                  <FaSpinner className="animate-spin" />
+                </span>
+              </>
+            ) : (
+              <> Place Order </>
+            )}
           </span>
         </Button>
         <Button className="w-full bg-red-100 px-6 py-3 text-red-500 text-sm hover:bg-red-200">
