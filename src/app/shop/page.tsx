@@ -9,7 +9,7 @@ import { Product } from "@/types/types";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import useAuthStore from "@/store/auth";
 import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
@@ -18,6 +18,8 @@ import OrderHistory from "@/modules/checkout/components/order-history";
 import { useQueryParamaters } from "@/store/use-query-parameters";
 import { useFetchFilteredProduct } from "@/modules/shop/queries/fetch-filtered-products";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useOrderData } from "@/store/order";
+import PaymentLinkModal from "@/modules/checkout/components/payment-link-modal";
 // Skeleton component for loading state
 const ProductSkeleton = () => {
   return (
@@ -48,6 +50,8 @@ const Shop = () => {
   const { mutateAsync: updateCart, isPending } = useUpdateCart();
   const { data: cartData } = useFetchCart(user?.id ? String(user.id) : "");
 
+  const { paymentPayload } = useOrderData();
+
   const [isOpen, setIsOpen] = useState(false);
   const [selectProduct, setSelectProduct] = useState<Product | null>(null);
 
@@ -71,7 +75,6 @@ const Shop = () => {
       setSelectedCategory(categoryName);
     }
   };
-
   // Handle adding product to cart
   const handleAddToCart = async (product: Product) => {
     if (isLoggedIn && user?.id && cartData) {
@@ -152,6 +155,7 @@ const Shop = () => {
 
   return (
     <>
+      <PaymentLinkModal />
       <ProductInformation
         isOpen={isOpen}
         setIsOpen={setIsOpen}
