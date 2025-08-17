@@ -15,7 +15,7 @@ export const useVerifyTransaction = (reference: string) => {
       : skipToken,
     enabled: !!reference,
     refetchInterval: (query) => {
-      const status = query.state.data.status;
+      const status = query.state.data?.status;
 
       return status && (status === "success" || status === "failed")
         ? false

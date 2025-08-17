@@ -54,7 +54,7 @@ const Shop = () => {
   const { paymentPayload } = useOrderData();
 
   const { data: verifiedTransaction, isLoading: isTransactionVerifying } = useVerifyTransaction(
-    paymentPayload?.payment.reference
+    paymentPayload?.payment?.reference
   );
 
   const [isOpen, setIsOpen] = useState(false);
