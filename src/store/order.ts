@@ -2,7 +2,7 @@ import { Order } from "@/types/types";
 import { create } from "zustand";
 
 interface PaymentInitialisePayload {
-  Payment: Record<string, any>;
+  payment: Record<string, any>;
   access_code: string;
   authorization_url: string;
 }
