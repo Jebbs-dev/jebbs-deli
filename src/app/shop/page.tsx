@@ -20,6 +20,7 @@ import { useFetchFilteredProduct } from "@/modules/shop/queries/fetch-filtered-p
 import { useDebounce } from "@/hooks/use-debounce";
 import { useOrderData } from "@/store/order";
 import PaymentLinkModal from "@/modules/checkout/components/payment-link-modal";
+import { useVerifyTransaction } from "@/modules/checkout/queries/verify-transaction";
 // Skeleton component for loading state
 const ProductSkeleton = () => {
   return (
@@ -51,6 +52,10 @@ const Shop = () => {
   const { data: cartData } = useFetchCart(user?.id ? String(user.id) : "");
 
   const { paymentPayload } = useOrderData();
+
+  const { data: verifiedTransaction, isLoading: isTransactionVerifying } = useVerifyTransaction(
+    paymentPayload?.payment.reference
+  );
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectProduct, setSelectProduct] = useState<Product | null>(null);
@@ -146,6 +151,7 @@ const Shop = () => {
     }
   };
 
+  console.log(verifiedTransaction);
   // Create an array of 8 items for skeleton loading
   const skeletonArray = Array(8).fill(null);
 
