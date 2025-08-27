@@ -21,6 +21,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useOrderData } from "@/store/order";
 import PaymentLinkModal from "@/modules/checkout/components/payment-link-modal";
 import { useVerifyTransaction } from "@/modules/checkout/queries/verify-transaction";
+import { FaClock } from "react-icons/fa6";
 // Skeleton component for loading state
 const ProductSkeleton = () => {
   return (
@@ -53,9 +54,8 @@ const Shop = () => {
 
   const { paymentPayload } = useOrderData();
 
-  const { data: verifiedTransaction, isLoading: isTransactionVerifying } = useVerifyTransaction(
-    paymentPayload?.payment?.reference
-  );
+  const { data: verifiedTransaction, isLoading: isTransactionVerifying } =
+    useVerifyTransaction(paymentPayload?.payment?.reference);
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectProduct, setSelectProduct] = useState<Product | null>(null);
@@ -224,13 +224,13 @@ const Shop = () => {
               </div>
             ) : filteredProducts && filteredProducts.length > 0 ? (
               // Actual products
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 hover:gap-5">
                 {filteredProducts?.map((product: any) => (
                   <div
-                    className="p-4 bg-white rounded-lg shadow-sm flex flex-col h-full"
+                    className="flex flex-col h-full hover:shadow-lg p-2 hover:rounded-lg"
                     key={product.id}
                   >
-                    <div className="relative h-[100px] bg-gray-300 rounded-md">
+                    <div className="relative h-[150px] bg-gray-300 rounded-xl">
                       <span
                         className="absolute top-2 right-2 bg-gray-50 bg-opacity-90 flex justify-center items-center rounded-sm cursor-pointer hover:bg-opacity-80 transition-all p-1"
                         onClick={() => handleAddToCart(product)}
@@ -247,7 +247,7 @@ const Shop = () => {
                           alt="Product Image"
                           width={100}
                           height={100}
-                          className="w-full h-full object-cover rounded-sm"
+                          className="w-full h-full object-cover rounded-xl"
                         />
                       ) : (
                         <Image
@@ -269,8 +269,11 @@ const Shop = () => {
                       >
                         {product.name} - {product.store?.name}
                       </h4>
-                      <p className="text-gray-400 flex flex-row gap-2">
-                        <span></span>
+                      <p className="text-stone-500 flex flex-row items-center gap-2 ">
+                        <span>
+                          <FaClock />
+                        </span>
+                        <span>{product.store?.preparationTime}</span>
                         {/* {product.description || "No description available"} */}
                       </p>
                       <div className="mt-2 flex justify-between items-center">
