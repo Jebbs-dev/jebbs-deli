@@ -39,6 +39,7 @@ const CartPageComponents = ({ storeId }: VendorPageProps) => {
     setOpenStoreId,
     handleClearVendorItems,
     setToggleCartView,
+    typedCartData
   } = useCartViewStore();
 
   const { onAuthFormOpen } = useAuthFormModal();
@@ -61,7 +62,7 @@ const CartPageComponents = ({ storeId }: VendorPageProps) => {
                     ...item,
                     onRemove: () => removeItem(item.id),
                     onAdd: () => addItem(item),
-                    cartId: isLoggedIn ? user?.id : undefined,
+                    cartId: isLoggedIn ? typedCartData?.id : undefined,
                   }}
                 />
               ))}
