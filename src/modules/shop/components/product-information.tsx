@@ -7,6 +7,7 @@ import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { ArrowRight } from "lucide-react";
 
 interface ProductInformationProps {
   isOpen: boolean;
@@ -73,7 +74,12 @@ const ProductInformation = ({
                   href={`/shop/${product?.store?.id}`}
                   className="hover:underline"
                 >
-                  <p className="text-sm">{product?.store?.name}</p>
+                  <p className="text-sm flex flex-row items-center gap-1">
+                    <span>{product?.store?.name}</span>
+                    <span>
+                      <ArrowRight width={15} />
+                    </span>
+                  </p>
                 </Link>
               </div>
               <Button
