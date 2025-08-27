@@ -79,49 +79,53 @@ const StorePage = () => {
 
   const openingTime = vendorStoreData?.openingTime;
   const closingTime = vendorStoreData?.closingTime;
-  
+
   // Today's date
   const today = new Date();
-  
+
   // Helper function to parse "9:00 am" into today's date
   const parseTimeToTodayDate = (timeString: string) => {
     const [time, modifier] = timeString.split(" ");
     let [hours, minutes] = time.split(":").map(Number);
-  
+
     if (modifier.toLowerCase() === "pm" && hours !== 12) {
       hours += 12;
     }
     if (modifier.toLowerCase() === "am" && hours === 12) {
       hours = 0;
     }
-  
+
     const parsedDate = new Date();
     parsedDate.setHours(hours);
     parsedDate.setMinutes(minutes);
     parsedDate.setSeconds(0);
     parsedDate.setMilliseconds(0);
-  
+
     return parsedDate;
   };
-  
+
   // Only parse if times are available
-  const parsedOpeningDate = openingTime ? parseTimeToTodayDate(openingTime) : null;
-  const parsedClosingDate = closingTime ? parseTimeToTodayDate(closingTime) : null;
-  
+  const parsedOpeningDate = openingTime
+    ? parseTimeToTodayDate(openingTime)
+    : null;
+  const parsedClosingDate = closingTime
+    ? parseTimeToTodayDate(closingTime)
+    : null;
+
   dayjs.extend(utc);
   dayjs.extend(timezone);
-  
+
   useEffect(() => {
     if (!parsedOpeningDate || !parsedClosingDate) return;
-  
+
     const TIMEZONE = "Africa/Lagos";
-  
+
     const now = dayjs().tz(TIMEZONE);
-  
+
     // Create Dayjs objects from already parsed Dates
     const opening = dayjs(parsedOpeningDate).tz(TIMEZONE);
     const closing = dayjs(parsedClosingDate).tz(TIMEZONE);
-  
+
     const storeOpeningTime = now
       .set("hour", opening.hour())
       .set("minute", opening.minute())
@@ -129,24 +133,24 @@ const StorePage = () => {
       .set("millisecond", 0);
 
     console.log(storeOpeningTime);
-  
+
     const storeClosingTime = now
       .set("hour", closing.hour())
       .set("minute", closing.minute())
       .set("second", 0)
       .set("millisecond", 0);
-  
+
     if (now.isAfter(storeOpeningTime) && now.isBefore(storeClosingTime)) {
       setShow(true);
     } else {
       setShow(false);
     }
-  
+
     const msUntilOpening = storeOpeningTime.diff(now);
     const msUntilClosing = storeClosingTime.diff(now);
-  
+
     const timers: NodeJS.Timeout[] = [];
-  
+
     if (msUntilOpening > 0) {
       timers.push(
         setTimeout(() => {
@@ -154,7 +158,7 @@ const StorePage = () => {
         }, msUntilOpening)
       );
     }
-  
+
     if (msUntilClosing > 0) {
       timers.push(
         setTimeout(() => {
@@ -162,7 +166,7 @@ const StorePage = () => {
         }, msUntilClosing)
       );
     }
-  
+
     return () => {
       timers.forEach(clearTimeout);
     };
@@ -216,7 +220,7 @@ const StorePage = () => {
           // Add new item with quantity 1
           updatedCartItems = [
             ...existingCartItems,
-            { ...productWithStore, quantity: 1 },
+            { ...productWithStore, quantity: 1, },
           ];
         }
 
@@ -235,7 +239,6 @@ const StorePage = () => {
         });
 
         // Add item to local cart state
-        addItem(productWithStore);
 
         toast({
           description: `${product.name} added to cart!`,
@@ -301,7 +304,7 @@ const StorePage = () => {
                   />
                   <div className="relative z-10 flex h-full w-full items-center justify-center">
                     <span className="text-white text-2xl font-semibold">
-                      Store is Closed
+                      Store opens by {vendorStoreData?.openingTime} tomorrow
                     </span>
                   </div>
                 </div>
