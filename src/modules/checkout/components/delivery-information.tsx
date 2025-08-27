@@ -248,7 +248,7 @@ const DeliveryInformation = ({
         </div>
         <div className="mt-4 flex flex-col gap-4">
           <Button asChild onClick={handlePlaceOrder}>
-            <span className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600">
+            <span className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600 cursor-pointer">
               {isOrderCreationPending || isCartUpdatePending ? (
                 <>
                   Creating Order
