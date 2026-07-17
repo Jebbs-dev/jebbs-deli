@@ -1,17 +1,12 @@
-"use client";
-
 import { useState } from "react";
-import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
-import { FaDiscord, FaGithub, FaTwitter } from "react-icons/fa";
-import { useRouter } from "next/navigation";
+import { FaTwitter } from "react-icons/fa";
+
 import { Separator } from "@/components/ui/separator";
 import AuthForm from "@/modules/auth/components/forms/auth-form";
 
-const AuthPage = () => {
+export function AuthPage() {
   const [variant, setVariant] = useState("login");
-
-  const router = useRouter();
 
   const toggleVariant = () => {
     setVariant((currentVariant) =>
@@ -22,7 +17,9 @@ const AuthPage = () => {
   return (
     <div className="w-full h-full md:h-screen bg-orange-50 flex flex-col bg-cover md:grid md:grid-cols-2">
       <div className="sm:h-[100vh] min-h-screen md:bg-opacity-70 text-sm flex items-center">
-        <h1 className="absolute top-3 left-[45%] mx-auto md:top-10 md:left-10 text-black text-2xl md:text-3xl">deli<span className="text-orange-400">.</span></h1>
+        <h1 className="absolute top-3 left-[45%] mx-auto md:top-10 md:left-10 text-black text-2xl md:text-3xl">
+          deli<span className="text-orange-400">.</span>
+        </h1>
         <div className="w-[80%] mx-auto flex flex-col space-y-2 xl:w-[60%] md:border-2 md:border-orange-400 md:rounded-md p-4 lg:p-10 mt-10 sm:mt-0">
           <h1 className="text-3xl font-semibold text-orange-400 text-center mb-3">
             {variant === "login"
@@ -76,17 +73,7 @@ const AuthPage = () => {
           </div>
         </div>
       </div>
-      <div className="md:h-screen md:w-full md:bg-[url('/images/auth-bg.jpg')] bg-cover">
-        {/* <Image
-          src={"/images/auth-bg.jpg"}
-          alt="logo"
-          width={200}
-          height={200}
-          className="h-full w-full"
-        /> */}
-      </div>
+      <div className="md:h-screen md:w-full md:bg-[url('/images/auth-bg.jpg')] bg-cover" />
     </div>
   );
-};
-
-export default AuthPage;
+}

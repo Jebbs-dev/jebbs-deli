@@ -3,6 +3,7 @@ import api from "@/utils/api";
 import { CartItemProps } from "@/store/cart";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useAuthStore from "@/store/auth";
+import { useToast } from "@/hooks/use-toast";
 
 // Define a simpler type for cart items that match what the backend expects
 interface SimpleCartItem {
@@ -16,6 +17,9 @@ export const useUpdateCart = () => {
   const queryClient = useQueryClient();
 
   const { user } = useAuthStore();
+
+      const { toast } = useToast();
+
 
   return useMutation({
     mutationFn: async (data: {

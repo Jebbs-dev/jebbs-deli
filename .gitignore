@@ -5,14 +5,17 @@
 /.pnp
 .pnp.js
 .yarn/install-state.gz
+package-lock.json
 .env
 
 # testing
 /coverage
 
-# next.js
+# next.js / tanstack start
 /.next/
 /out/
+/.output/
+/dist/
 
 # production
 /build
@@ -34,4 +37,13 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+
+#opencode
+.opencode
+
+#impeccable
+.impeccable
+
+#tanstack
+.tanstack

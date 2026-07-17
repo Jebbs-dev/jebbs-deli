@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
-import Image from "next/image";
+import { Image } from "@unpic/react";
 
 const Faqs = () => {
   const [selectedFaq, setSelectedFaq] = useState(1);

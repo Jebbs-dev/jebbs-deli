@@ -16,7 +16,7 @@ import { useLoginUser } from "../../mutations/login";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateUser } from "../../mutations/register";
 import { useAuthFormModal } from "@/store/auth-form-modal";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { FaSpinner } from "react-icons/fa6";
 
 interface AuthFormProps {
@@ -47,7 +47,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
   } = useCreateUser();
   const { toast } = useToast();
   const { onAuthFormClose } = useAuthFormModal();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const formSchema = z.object({
     name: z
@@ -119,7 +119,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
         title: "Success",
         description: "User created successfully!",
       });
-      router.push("/auth");
+      navigate({ to: "/auth" });
     } catch (error) {
       toast({
         variant: "destructive",

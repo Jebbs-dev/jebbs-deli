@@ -1,4 +1,7 @@
-"use client";
+import { Image } from "@unpic/react";
+import { useState } from "react";
+import { ShoppingCart } from "lucide-react";
+import { FaClock } from "react-icons/fa6";
 
 import { Button } from "@/components/ui/button";
 import { categories } from "@/modules/shop/components/categories/data";
@@ -7,9 +10,6 @@ import { useFetchProduct } from "@/modules/shop/queries/fetch-products";
 import useCartStore from "@/store/cart";
 import { Product } from "@/types/types";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
-import { ShoppingCart } from "lucide-react";
-import Image from "next/image";
-import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import useAuthStore from "@/store/auth";
 import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
@@ -21,8 +21,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useOrderData } from "@/store/order";
 import PaymentLinkModal from "@/modules/checkout/components/payment-link-modal";
 import { useVerifyTransaction } from "@/modules/checkout/queries/verify-transaction";
-import { FaClock } from "react-icons/fa6";
-// Skeleton component for loading state
+
 const ProductSkeleton = () => {
   return (
     <div className="p-4 bg-white rounded-lg shadow-sm animate-pulse">
@@ -37,7 +36,7 @@ const ProductSkeleton = () => {
   );
 };
 
-const Shop = () => {
+export function ShopPage() {
   const { toast } = useToast();
   const { isLoggedIn, user } = useAuthStore();
   const { querykey } = useQueryParamaters();
@@ -325,6 +324,4 @@ const Shop = () => {
       </div>
     </>
   );
-};
-
-export default Shop;
+}

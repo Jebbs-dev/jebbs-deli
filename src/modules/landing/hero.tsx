@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
+import { Image } from "@unpic/react";
 import { FaClock } from "react-icons/fa6";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 export const HeroSection = () => {
   return (
@@ -26,7 +25,7 @@ export const HeroSection = () => {
             </p>
             <div className="flex flex-row justify-start space-x-5 my-5 py-3 ">
               <div className="w-1/2 md:w-auto">
-                <Link href="/shop">
+                <Link to="/shop">
                   <button
                     type="button"
                     className="rounded-md w-full px-4 py-2 text-white border-solid border-[1px] bg-orange-400 border-orange-400 hover:bg-orange-500 hover:border-orange-500 cursor-pointer"

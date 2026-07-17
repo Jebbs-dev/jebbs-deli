@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
+import { Link } from "@tanstack/react-router";
+import { Image } from "@unpic/react";
 import { widgets } from "./data/widgets";
 import { ArrowDown, ArrowRight, ArrowUpRight } from "lucide-react";
 import {
@@ -13,8 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "motion/react";
 
 export const CtaSection = () => {
   const { scrollYProgress } = useScroll({
@@ -32,7 +31,7 @@ export const CtaSection = () => {
       transition: {
         delay: i * 0.2,
         duration: 0.8,
-        ease: "easeOut"
+        ease: "easeOut" as const
       }
     })
   };
@@ -90,7 +89,7 @@ export const CtaSection = () => {
                       from your desired restaurants when you join our network.
                     </p>
                     <Link
-                      href="/customers"
+                      to="/shop"
                       className="tracking-widest font-semibold hover:underline"
                     >
                       <span className="flex flex-row items-center">

@@ -1,42 +1,37 @@
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { FaClock, FaUserPlus, FaUtensils, FaHeadset, FaBell } from "react-icons/fa";
-import Image from "next/image";
-import Pizzo from "../../../public/images/carousel-items/pizzo.png"
-import Meal from "../../../public/images/carousel-items/meal.png"
-import Order from "../../../public/images/carousel-items/order.png"
-import Satisfaction from "../../../public/images/carousel-items/satisfaction.png"
-import Started from "../../../public/images/carousel-items/started.png"
+import { Image } from "@unpic/react";
 
 const carouselItems = [
   {
     id: 1,
     title: "Get Started...",
-    image: Pizzo,
+    image: "/images/carousel-items/pizzo.png",
     color: "#FF8A65",
   },
   {
     id: 2,
     title: "Visit the App",
-    image: Started,
+    image: "/images/carousel-items/started.png",
     color: "#BA68C8",
   },
   {
     id: 3,
     title: "Make your Order",
-    image: Order,
+    image: "/images/carousel-items/order.png",
     color: "#4DB6AC",
   },
   {
     id: 4,
     title: "Enjoy your Meal",
-    image: Meal,
+    image: "/images/carousel-items/meal.png",
     color: "#FFD54F",
   },
   {
     id: 5,
     title: "Satisfaction Guaranteed",
-    image: Satisfaction,
+    image: "/images/carousel-items/satisfaction.png",
     color: "#90CAF9",
   },
 ];
@@ -105,9 +100,9 @@ const GetStarted = () => {
                   <Image
                     src={carouselItems[activeIndex].image}
                     alt={carouselItems[activeIndex].title}
-                    fill
-                    className="object-contain"
-                    priority
+                    width={400}
+                    height={400}
+                    className="w-full h-full object-contain"
                   />
                 </motion.div>
               </div>

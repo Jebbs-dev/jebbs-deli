@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import CartSheet, { FetchedCartData } from "../cart/components/cart-sheet";
 import {
@@ -24,7 +24,6 @@ import {
   Settings,
 } from "lucide-react";
 import useAuthStore from "@/store/auth";
-import { useRouter } from "next/navigation";
 import { useFetchCart } from "../cart/queries/fetch-cart";
 import useCartStore from "@/store/cart";
 import { useCartViewStore } from "@/store/cart-data";
@@ -61,7 +60,7 @@ const Header = () => {
   const { data: userInformation } = useFetchUserInformation(String(user?.id));
 
   const { totalItems } = useCartStore();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // Fetch cart data
   const { data: fetchedCartData } = useFetchCart(
@@ -79,7 +78,7 @@ const Header = () => {
       <header className="border-b border-x-gray-100 fixed w-full left-0 z-50 bg-white">
         <div className="w-full bg-white flex justify-between h-[75px] md:h-[81px] px-4 md:px-10 mx-auto py-4">
           <div className="flex md:flex-row gap-10">
-            <Link href="/shop" className="flex items-center">
+            <Link to="/shop" className="flex items-center">
               <h1 className="mx-auto md:top-10 md:left-10 text-black text-2xl md:text-3xl">
                 deli<span className="text-orange-400">.</span>
               </h1>
@@ -242,7 +241,7 @@ const Header = () => {
                       onClick={() => {
                         logout();
                         setIsOpen(false);
-                        router.push("/shop");
+                        navigate({ to: "/shop" });
                       }}
                     >
                       Logout

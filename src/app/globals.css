@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "@fontsource-variable/dm-sans";
+
+@config "../../tailwind.config.mjs";
+
+@theme inline {
+  --font-sans: "DM Sans Variable", sans-serif;
+}
 
 *::-webkit-scrollbar {
   display: none;
@@ -80,7 +85,10 @@ input::-webkit-inner-spin-button {
   }
 }
 
-
-
-
-
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

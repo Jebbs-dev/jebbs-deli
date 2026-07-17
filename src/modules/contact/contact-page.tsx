@@ -1,8 +1,8 @@
-import ContactForm from "@/modules/contact/contact-form";
-import Image from "next/image";
-import React from "react";
+import { Image } from "@unpic/react";
 
-const Contact = () => {
+import ContactForm from "@/modules/contact/contact-form";
+
+export function ContactPage() {
   return (
     <div className="bg-orange-50">
       <div className="">
@@ -21,11 +21,9 @@ const Contact = () => {
         </div>
 
         <div>
-          <ContactForm/>
+          <ContactForm />
         </div>
       </div>
     </div>
   );
-};
-
-export default Contact;
+}

@@ -1,17 +1,14 @@
-"use client";
+import { useRouterState } from "@tanstack/react-router";
 
-import Faqs from "@/modules/landing/faqs";
 import Navigation from "@/modules/landing/navigation";
-import Reservation from "@/modules/landing/reservation/reservation";
 import Footer from "@/modules/shop/components/footer";
-import { usePathname } from "next/navigation";
 
 interface PathnameProviderProps {
   children: React.ReactNode;
 }
 
 const PathnameProvider = ({ children }: PathnameProviderProps) => {
-  const pathname = usePathname();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   const authRoute = ["/auth"];
   const shopRoute = ["/shop"];
@@ -22,12 +19,6 @@ const PathnameProvider = ({ children }: PathnameProviderProps) => {
         <Navigation />
       )}
       {children}
-      {!authRoute.includes(pathname) && !pathname.startsWith(shopRoute[0]) && (
-        <Faqs />
-      )}
-      {!authRoute.includes(pathname) && !pathname.startsWith(shopRoute[0]) && (
-        <Reservation />
-      )}
       {!authRoute.includes(pathname) && !pathname.startsWith(shopRoute[0]) && (
         <Footer />
       )}

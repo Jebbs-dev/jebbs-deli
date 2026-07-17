@@ -1,58 +1,36 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
-import CartItem from "@/modules/shop/cart/components/cart-item";
-import useCartStore, { CartItemProps } from "@/store/cart";
-import Image from "next/image";
-import { useParams, usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { formatNumberWithCommas } from "@/utils/formatNumber";
-import Link from "next/link";
-import { useFetchVendorStoreById } from "@/modules/shop/queries/fetch-vendor-store-by-id";
-import { ArrowDown, ArrowLeft } from "lucide-react";
-import { useFetchProductsByStore } from "@/modules/shop/queries/fetch-products-by-store";
-import { useToast } from "@/hooks/use-toast";
-import { Product } from "@/types/types";
-import CartPage from "@/modules/shop/cart/components/cart-page";
-import CartSheet from "@/modules/shop/cart/components/cart-sheet";
-import { useCartViewStore } from "@/store/cart-data";
-import CheckoutPage from "@/modules/checkout/components/checkout-page";
-import useAuthStore from "@/store/auth";
-import { useAuthFormModal } from "@/store/auth-form-modal";
-import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
-import CartPageComponents from "@/modules/shop/cart/components/cart-page-components";
-import CheckoutOrderPage from "@/modules/checkout/components/checkout-order-page";
-import PaymentPage from "@/modules/checkout/components/payment-page";
-import { useFetchCart } from "@/modules/shop/cart/queries/fetch-cart";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { Image } from "@unpic/react";
+import { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 
-const specializedTags = [
-  "All",
-  "Main menu",
-  "Protein",
-  "Swallows",
-  "Soups",
-  "Value Munch",
-  "Sides",
-  "Beverages",
-  "Snacks",
-  "Pack",
-];
+import { Button } from "@/components/ui/button";
+import useCartStore from "@/store/cart";
+import { formatNumberWithCommas } from "@/utils/formatNumber";
+import { useFetchVendorStoreById } from "@/modules/shop/queries/fetch-vendor-store-by-id";
+import { useToast } from "@/hooks/use-toast";
+import { Product } from "@/types/types";
+import useAuthStore from "@/store/auth";
+import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
+import { useCartViewStore } from "@/store/cart-data";
+import CartPageComponents from "@/modules/shop/cart/components/cart-page-components";
+import CheckoutOrderPage from "@/modules/checkout/components/checkout-order-page";
+import PaymentPage from "@/modules/checkout/components/payment-page";
+import { useFetchCart } from "@/modules/shop/cart/queries/fetch-cart";
 
-const StorePage = () => {
+export function StorePage() {
   const { toast } = useToast();
 
-  const { storeId } = useParams();
+  const { storeId } = useParams({ from: "/shop/$storeId" });
+  const navigate = useNavigate();
 
   const { addItem, removeItem, clearCart, clearVendorItems } = useCartStore();
 
   const [show, setShow] = useState(false);
 
   const [selectedTag, setSelectedTag] = useState<string>("All");
-
-  const router = useRouter();
 
   const { isLoggedIn, user } = useAuthStore();
 
@@ -274,7 +252,7 @@ const StorePage = () => {
           <span
             className="flex flex-row items-center mb-3 cursor-pointer"
             onClick={() => {
-              router.push("/shop");
+              navigate({ to: "/shop" });
             }}
           >
             <ArrowLeft size={20} className="mr-2" />
@@ -506,6 +484,4 @@ const StorePage = () => {
       </div>
     </div>
   );
-};
-
-export default StorePage;
+}

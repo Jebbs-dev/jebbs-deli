@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import Image from "next/image";
+import { Image } from "@unpic/react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const Services = () => {

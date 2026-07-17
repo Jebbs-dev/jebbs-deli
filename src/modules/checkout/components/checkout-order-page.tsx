@@ -5,10 +5,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Cart, Product } from "@/types/types";
-import Image from "next/image";
 import useCartStore, { CartItemProps } from "@/store/cart";
 import CartItem from "@/modules/shop/cart/components/cart-item";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
+import { Image } from "@unpic/react";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
 
@@ -90,7 +90,8 @@ const CheckoutOrderPage = ({ proceedToPayment }: CheckoutOrderProps) => {
                   <div className="flex flex-1 items-end justify-between text-sm">
                     {/* <Button asChild> */}
                     <Link
-                      href={`/shop/${store.storeId}`}
+                      to="/shop/$storeId"
+                      params={{ storeId: String(store.storeId) }}
                       className="flex items-center gap-2 bg-primary text-white rounded-full px-4 py-2"
                       onClick={() => {
                         setIsOpen(false);

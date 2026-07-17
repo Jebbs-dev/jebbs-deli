@@ -1,6 +1,6 @@
 import { CartItemProps } from "@/store/cart";
 import { Product } from "@/types/types";
-import Image from "next/image";
+import { Image } from "@unpic/react";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
 import { useUpdateCart } from "../mutations/update-cart";

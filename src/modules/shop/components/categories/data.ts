@@ -1,5 +1,3 @@
-import { color } from "framer-motion"
-
 const Dessert = "/images/categories/dessert.png"
 const Meal = "/images/categories/dinner-plate.png"
 const Drink = "/images/categories/drink.png"

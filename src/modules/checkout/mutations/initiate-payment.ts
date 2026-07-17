@@ -2,7 +2,6 @@ import { Cart, Order } from "@/types/types";
 import api from "@/utils/api";
 import { CartItemProps } from "@/store/cart";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useOrderData } from "@/store/order";
 
 export interface PaymentProps {
@@ -17,8 +16,6 @@ export interface PaymentProps {
 }
 
 export const useInitialisePayment = () => {
-  const router = useRouter();
-
   const { setPaymentPayload, setPaymentlinkModalOpen } = useOrderData();
 
   return useMutation({

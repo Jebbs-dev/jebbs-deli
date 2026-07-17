@@ -5,10 +5,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Cart, Product } from "@/types/types";
-import Image from "next/image";
+import { Image } from "@unpic/react";
 import useCartStore, { CartItemProps } from "@/store/cart";
 import CartItem from "@/modules/shop/cart/components/cart-item";
-import Link from "next/link";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
 import { useState } from "react";

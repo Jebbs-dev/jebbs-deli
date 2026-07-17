@@ -2,15 +2,18 @@ import { Cart, User } from "@/types/types";
 import api from "@/utils/api";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import useAuthStore from "@/store/auth";
 import { useAuthFormModal } from "@/store/auth-form-modal";
+import { useCartViewStore } from "@/store/cart-data";
+import { set } from "react-hook-form";
 
 export const useLoginUser = () => {
-  const router = useRouter();
   const login = useAuthStore((state) => state.login);
 
   const { onAuthFormClose } = useAuthFormModal();
+
+    const { setIsOpen } =
+      useCartViewStore();
 
   const queryClient = useQueryClient();
 
@@ -25,7 +28,7 @@ export const useLoginUser = () => {
         login(data.user);
 
         onAuthFormClose();
-
+        setIsOpen(true);
         queryClient.invalidateQueries({ queryKey: ["cart", data.user?.id] });
         // Move the cart handling logic here
 

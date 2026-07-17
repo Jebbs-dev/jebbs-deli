@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { ModeToggle } from "@/components/global/mode-toggle";
-import PhoneCall from "../../../public/gifs/icons8-phone-ringing.gif";
+import { Link } from "@tanstack/react-router";
+import { Image } from "@unpic/react";
 import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
+
+import { ModeToggle } from "@/components/global/mode-toggle";
 
 const Navigation = () => {
   const [scrollNav, setScrollNav] = useState(false);
@@ -29,7 +28,7 @@ const Navigation = () => {
       }`}
     >
       <aside className="flex items-center gap-2">
-        <Link href="/">
+        <Link to="/">
           <h1 className="mx-auto md:top-10 md:left-10 text-black text-2xl md:text-3xl">
             deli<span className="text-orange-400">.</span>
           </h1>
@@ -41,7 +40,7 @@ const Navigation = () => {
         }`}
       >
         <ul className="flex items-center justify-center gap-8">
-          <Link href="#" className="group relative">
+          <a href="#" className="group relative">
             <li>Products</li>
             <Image
               src="/svgs/company-hover.svg"
@@ -50,8 +49,8 @@ const Navigation = () => {
               alt="hover decoration"
               className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
             />
-          </Link>
-          <Link href="#" className="group relative">
+          </a>
+          <a href="#" className="group relative">
             <li>Company</li>
             <Image
               src="/svgs/company-hover.svg"
@@ -60,8 +59,8 @@ const Navigation = () => {
               alt="hover decoration"
               className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
             />
-          </Link>
-          <Link href="#faqs" className="group relative">
+          </a>
+          <a href="#faqs" className="group relative">
             <li>FAQs</li>
             <Image
               src="/svgs/company-hover.svg"
@@ -70,8 +69,8 @@ const Navigation = () => {
               alt="hover decoration"
               className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
             />
-          </Link>
-          <Link href="/contact" className="group relative">
+          </a>
+          <Link to="/contact" className="group relative">
             <li>Contact</li>
             <Image
               src="/svgs/company-hover.svg"
@@ -85,13 +84,13 @@ const Navigation = () => {
       </nav>
       <aside className="flex items-center gap-4">
         <Link
-          href="/shop"
+          to="/shop"
           className="relative bg-orange-400 flex items-center justify-center rounded-full w-[30px] h-[30px] md:w-[45px] md:h-[45px] text-white shadow-indigo-500/40"
         >
           <svg
             stroke="currentColor"
             fill="currentColor"
-            stroke-width="0"
+            strokeWidth="0"
             viewBox="0 0 24 24"
             height="22"
             width="22"
@@ -103,13 +102,14 @@ const Navigation = () => {
           </svg>
         </Link>
 
-        <Link
+        <a
           href="https://jebbs-deli-admin.vercel.app/auth"
           target="_blank"
-          className="flex items-center justify-center text-white h-[30px] md:h-[45px] rounded-full bg-green-700 text-sm md:text-base px-3  md:py-0"
+          rel="noreferrer"
+          className="flex items-center justify-center text-white h-[30px] md:h-[45px] rounded-full bg-green-700 text-sm md:text-base px-3 md:py-0"
         >
           Vendors
-        </Link>
+        </a>
 
         <ModeToggle />
       </aside>

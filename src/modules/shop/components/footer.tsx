@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import React from "react";
 
 const Footer = () => {
@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="md:container mx-auto px-10">
         <div className="md:flex md:justify-between">
           <div className="mb-6 md:mb-0">
-            <Link href="/shop">
+            <Link to="/shop">
               <h1 className="mx-auto md:top-10 md:left-10 text-black text-3xl md:text-5xl">
                 deli<span className="text-orange-400">.</span>
               </h1>
@@ -51,7 +51,7 @@ const Footer = () => {
         <div className="sm:flex sm:items-center sm:justify-between mt-4">
           <span>
             ©2023,{" "}
-            <Link href="/" className="hover:underline">
+            <Link to="/" className="hover:underline">
               Deli.
             </Link>
           </span>

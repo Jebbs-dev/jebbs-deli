@@ -2,11 +2,11 @@ import { Cart, User } from "@/types/types";
 import api from "@/utils/api";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import useAuthStore from "@/store/auth";
 
 export const useUpdateUser = (userId: string) => {
-  const router = useRouter();
+  const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
 
   const queryClient =  useQueryClient()
@@ -20,7 +20,7 @@ export const useUpdateUser = (userId: string) => {
     onSuccess: (data) => {
       if (data) {
         // Store tokens in localStorage
-        router.push("/shop");
+        navigate({ to: "/shop" });
 
         queryClient.invalidateQueries({queryKey: ["users"]})
 

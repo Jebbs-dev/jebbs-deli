@@ -4,8 +4,8 @@ import useCartStore from "@/store/cart";
 import { Product } from "@/types/types";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
-import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
+import { Image } from "@unpic/react";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight } from "lucide-react";
 
@@ -71,7 +71,8 @@ const ProductInformation = ({
               <div className="flex-grow">
                 <span className="text-orange-400">Vendor</span>{" "}
                 <Link
-                  href={`/shop/${product?.store?.id}`}
+                  to="/shop/$storeId"
+                  params={{ storeId: String(product?.store?.id) }}
                   className="hover:underline"
                 >
                   <p className="text-sm flex flex-row items-center gap-1">

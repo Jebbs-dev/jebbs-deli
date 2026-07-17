@@ -5,7 +5,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import AuthForm from "./forms/auth-form";
 import { useAuthFormModal } from "@/store/auth-form-modal";
@@ -14,8 +13,6 @@ const AuthModal = () => {
   const [variant, setVariant] = useState("login");
 
   const { isAuthFormOpen, onAuthFormClose } = useAuthFormModal();
-
-  const router = useRouter();
 
   const toggleVariant = () => {
     setVariant((currentVariant) =>

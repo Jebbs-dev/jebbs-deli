@@ -2,12 +2,9 @@ import { User } from "@/types/types";
 import api from "@/utils/api";
 
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
 export const useCreateUser = () => {
-  const router = useRouter();
-
   const { toast } = useToast();
 
   return useMutation({
@@ -16,9 +13,6 @@ export const useCreateUser = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      setTimeout(() => {
-        router.refresh();
-      }, 300);
       if (data) {
         // toast({
         //   title: "Success",
