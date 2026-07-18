@@ -1,20 +1,24 @@
 import { HeroSection } from "@/modules/landing/hero";
-import { Services } from "@/modules/landing/services/services";
-import GetStarted from "@/modules/landing/get-started";
+import { MissionStrip } from "@/modules/landing/mission";
+import { MenuGrid } from "@/modules/landing/menu-grid";
+import { CuisinesSection } from "@/modules/landing/cuisines";
+import { WhyDeli } from "@/modules/landing/why-deli";
+import { PillarsSection } from "@/modules/landing/pillars";
 import Faqs from "@/modules/landing/faqs";
-import { CtaSection } from "@/modules/landing/cta/cta";
-import Reservation from "@/modules/landing/reservation/reservation";
+import { FinalCta } from "@/modules/landing/final-cta";
 
 export function HomePage() {
   return (
-    <div className="bg-land-surface text-land-on-background min-h-screen flex flex-col">
+    <div className="flex min-h-screen flex-col bg-ash text-cream">
       <main className="flex-grow">
         <HeroSection />
-        <Services />
-        <GetStarted />
-        <Reservation />
+        <MissionStrip />
+        <MenuGrid />
+        <CuisinesSection />
+        <WhyDeli />
+        <PillarsSection />
         <Faqs />
-        <CtaSection />
+        <FinalCta />
       </main>
     </div>
   );

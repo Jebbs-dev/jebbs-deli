@@ -4,15 +4,16 @@
 **Fulness Ojebiyi**
 
 ## Overview
-Jebbs Deli is a modern food delivery platform built with Next.js 14. It provides a seamless experience for customers to order meals from their favorite restaurants. The application features a beautiful, responsive UI with real-time order tracking, location-based services, and an intuitive user interface.
+Jebbs Deli is a modern food delivery platform built with TanStack Start. It provides a seamless experience for customers to order meals from their favorite restaurants. The application features a beautiful, responsive UI with real-time order tracking, location-based services, and an intuitive user interface.
 
 ## Tech Stack
-- **Framework**: Next.js 14
+- **Framework**: TanStack Start (Vite + Nitro SSR)
+- **Routing**: TanStack Router (file routes in `src/app/`)
 - **Styling**: Tailwind CSS
 - **State Management**: Zustand
 - **UI Components**: Shadcn UI (Radix UI)
 - **Data Fetching**: TanStack Query
-- **Animation**: Framer Motion
+- **Animation**: Motion
 - **Icons**:Lucide React, React Icons
 - **Maps**: Google Maps API
 - **Type Safety**: TypeScript
@@ -60,7 +61,7 @@ Jebbs Deli is a modern food delivery platform built with Next.js 14. It provides
 ```
 jebbs-deli/
 ├── src/
-│   ├── app/          # Next.js app directory and page components
+│   ├── app/          # TanStack Router file routes and root layout
 │   ├── components/   # Reusable UI components
 │   ├── hooks/        # Custom React hooks
 │   ├── lib/          # Utility functions and configurations
@@ -79,13 +80,13 @@ jebbs-deli/
 - Real-time order tracking
 - Interactive maps integration
 - Responsive and modern UI design
-- Interactive animations with Framer Motion
+- Interactive animations with Motion
 - Advanced state management
 - Type-safe development
 
 ## Third-Party Libraries
 - **@radix-ui/react-***: Accessible UI components
-- **framer-motion**: Animation library
+- **motion**: Animation library
 - **react-icons**: Icon library
 - **zustand**: State management
 - **class-variance-authority**: Component styling utilities
@@ -100,7 +101,7 @@ jebbs-deli/
 - Modern ESLint configuration
 
 ## Deployment
-The application can be deployed on Vercel or any other platform that supports Next.js applications. Make sure to:
+The application can be deployed on Vercel or any other platform that supports TanStack Start / Vite SSR builds. Make sure to:
 1. Set up all environment variables in your deployment platform
 2. Configure the Google Maps API key for production
 3. Update any API endpoints to production URLs

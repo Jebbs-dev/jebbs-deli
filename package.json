@@ -11,6 +11,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@fontsource-variable/geist": "^5.2.9",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@headlessui/react": "^2.2.10",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.4.0",
@@ -50,7 +52,6 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
-    "@fontsource-variable/dm-sans": "^5.2.8",
     "@tailwindcss/postcss": "^4.3.0",
     "@tailwindcss/vite": "^4.3.2",
     "@types/node": "^25.9.1",

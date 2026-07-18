@@ -1,5 +1,6 @@
 import { Image } from "@unpic/react";
 import { useState } from "react";
+import { useSearch } from "@tanstack/react-router";
 import { ShoppingCart } from "lucide-react";
 import { FaClock } from "react-icons/fa6";
 
@@ -40,6 +41,7 @@ export function ShopPage() {
   const { toast } = useToast();
   const { isLoggedIn, user } = useAuthStore();
   const { querykey } = useQueryParamaters();
+  const { category: categoryParam } = useSearch({ from: "/shop/" });
 
   const debouncedQuery = useDebounce(querykey, 1000);
 
@@ -59,7 +61,12 @@ export function ShopPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectProduct, setSelectProduct] = useState<Product | null>(null);
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    () =>
+      categories.find(
+        (c) => c.name.toLowerCase() === categoryParam?.toLowerCase()
+      )?.name ?? null
+  );
   const { addItem } = useCartStore();
 
   // Filter products based on selected category

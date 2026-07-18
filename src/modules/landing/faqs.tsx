@@ -1,89 +1,91 @@
-import { Button } from "@/components/ui/button";
-import React, { useState } from "react";
-import { Image } from "@unpic/react";
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { cn } from "@/lib/utils";
+import { FAQS } from "@/modules/landing/data/menu";
 
-const Faqs = () => {
-  const [selectedFaq, setSelectedFaq] = useState(1);
-
-  const faqs = [
-    {
-      id: 1,
-      question: "What is Deli?",
-      answer:
-        "Deli is a food delivery service that offers a variety of local and African cuisines to its customers. Our mission is to provide high-quality, fresh, and locally sourced food to help you enjoy your meal without the hassle of searching for food in your area.",
-    },
-    {
-      id: 2,
-      question: "What is Service Fee?",
-      answer:
-        "Deli charges a service fee of 15% on the total price of your order. This fee is included in your order confirmation and will be deducted from your account balance after your order is delivered.",
-    },
-    {
-      id: 3,
-      question: "Why do we charge service fee?",
-      answer:
-        "Service fees are a necessary component of our business model to cover our costs and ensure that our customers receive the best possible experience. By charging a service fee, we help to fund our operations, invest in new restaurants, and support our team of delivery drivers.",
-    },
-    {
-      id: 4,
-      question: "How do I create an account on Deli?",
-      answer:
-        "To create an account on Deli, simply visit our website, enter your name, email address, and password, and click the 'Sign Up' button. You will receive a confirmation email to verify your account and set up your profile.",
-    },
-    {
-      id: 5,
-      question: "How do I update my profile?",
-      answer:
-        "To update your profile, simply visit your account settings page, make your desired changes, and click the 'Update Profile' button. You will receive a confirmation email to verify your changes.",
-    },
-    {
-      id: 6,
-      question: "What Locations do we currently deliver to?",
-      answer:
-        "We currently pick up and also deliver food to places in Lagos.This means you can find your favourite restaurants and food vendors who are in these locations and order your meals from them.",
-    },
-  ];
+export default function Faqs() {
+  const [openId, setOpenId] = useState<string | null>(FAQS[0]?.id ?? null);
+  const reduceMotion = useReducedMotion();
 
   return (
-    <div className="w-full pt-20" id="faqs">
-      <div className="w-[90vw] mx-auto border-[3px] outline-2 outline-orange-400 border-orange-400 bg-orange-50 rounded-lg relative -top-60 p-5 md:p-10">
-        <div className="flex flex-col md:flex-row gap-5">
-          <div className=" w-full md:w-1/2 flex flex-col order-2 md:order-1 gap-10 h-40 md:h-full ">
-            <h2 className="text-3xl hidden md:block md:text-5xl font-bold">FAQs</h2>
-            <h2 className="text-3xl md:hidden md:text-5xl font-bold">Questions</h2>
-            <div className="gap-5 flex flex-row md:flex-col overflow-scroll">
-              {faqs.map((faq) => (
-                <Button
-                  className={`md:w-[90%] h-14 text-lg md:text-xl md:block text-left justify-start border-white ${selectedFaq === faq.id ? 'bg-green-700 text-white hover:bg-green-800' : ''}`}
-                  key={faq.id}
-                  onClick={() => setSelectedFaq(faq.id)}
+    <section
+      id="faqs"
+      className="border-b border-ash/10 bg-paper px-5 py-20 md:px-8 md:py-28"
+      aria-labelledby="faqs-heading"
+    >
+      <div className="mx-auto max-w-[800px]">
+        <motion.h2
+          id="faqs-heading"
+          className="font-display text-headline-lg text-ash"
+          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+        >
+          FAQs
+        </motion.h2>
+        <p className="mt-3 text-body-md text-ash/65">
+          Delivery areas, timing, and fees — answered.
+        </p>
+
+        <ul className="mt-10 divide-y divide-ash/10 border-y border-ash/10">
+          {FAQS.map((faq) => {
+            const open = openId === faq.id;
+            return (
+              <li key={faq.id}>
+                <h3>
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    aria-controls={`faq-panel-${faq.id}`}
+                    id={`faq-trigger-${faq.id}`}
+                    onClick={() => setOpenId(open ? null : faq.id)}
+                    className="flex w-full items-start gap-4 py-5 text-left text-ash underline-offset-4 hover:underline hover:decoration-scotch hover:decoration-2"
+                  >
+                    <span className="shrink-0 font-mono text-label-sm text-ash/65">
+                      {faq.id}
+                    </span>
+                    <span className="flex-1 font-display text-lg font-semibold">
+                      {faq.question}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "mt-1 h-5 w-5 shrink-0 text-ash/50 transition-transform duration-200",
+                        open && "rotate-180 text-scotch"
+                      )}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </h3>
+                <div
+                  id={`faq-panel-${faq.id}`}
+                  role="region"
+                  aria-labelledby={`faq-trigger-${faq.id}`}
+                  hidden={!open}
+                  className="pb-5 pl-12 pr-8"
                 >
-                  {faq.question}
-                </Button>
-              ))}
-            </div>
-          </div>
+                  {open && (
+                    <p className="text-body-md text-ash/75">{faq.answer}</p>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
 
-          <div className="md:w-1/2 flex flex-col order-1 md:order-2 gap-10">
-            <h2 className="text-3xl hidden md:block md:text-5xl font-bold">Answer</h2>
-            <h2 className="text-3xl md:hidden md:text-5xl font-bold">FAQs</h2>
-            <div className="px-5">
-              <Image
-                src="/images/icons8-star-48.png"
-                alt="star"
-                width={50}
-                height={50}
-                className="w-10 h-10 mb-5"
-              />
-              <p className="text-xl leading-relaxed">
-                {faqs.find(faq => faq.id === selectedFaq)?.answer}
-              </p>
-            </div>
-          </div>
-        </div>
+        <p className="mt-8 text-body-md text-ash/70">
+          Still have a question?{" "}
+          <Link
+            to="/contact"
+            className="inline-flex items-center gap-1 font-semibold text-ash underline underline-offset-4 decoration-scotch decoration-2"
+          >
+            Contact us
+            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </p>
       </div>
-    </div>
+    </section>
   );
-};
-
-export default Faqs;
+}
