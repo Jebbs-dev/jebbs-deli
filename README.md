@@ -42,7 +42,7 @@ Jebbs Deli is a modern food delivery platform built with TanStack Start. It prov
    Create a `.env.local` file in the root directory with the following variables:
    ```
    # API Configuration
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:3000 || https://your-production-domain.com
+   VITE_API_BASE_URL=http://localhost:3000 || https://your-production-domain.com
    
    # Google Maps Configuration
    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key

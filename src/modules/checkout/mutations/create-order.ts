@@ -1,10 +1,11 @@
-import { Cart, Order } from "@/types/types";
+import { Order } from "@/types/types";
 import api from "@/utils/api";
-import { CartItemProps } from "@/store/cart";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrderData } from "@/store/order";
 import { useInitialisePayment } from "./initiate-payment";
 import useAuthStore from "@/store/auth";
+
+export type OrderPaymentMethod = "wallet" | "paystack";
 
 interface OrderItemProps {
   storeId: string;
@@ -14,34 +15,47 @@ interface OrderItemProps {
 }
 
 export const useCreateOrder = () => {
-  const { setOrderData, setPaymentlinkModalOpen } = useOrderData();
+  const { setOrderData } = useOrderData();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
 
-  const {
-    mutateAsync: initialisePayment,
-    isPending: isPaymentInitialisationPending,
-  } = useInitialisePayment();
+  const { mutateAsync: initialisePayment } = useInitialisePayment();
 
   return useMutation({
     mutationFn: async (data: {
       orderData: Omit<Order, "id">;
       orderItems: OrderItemProps[];
+      paymentMethod?: OrderPaymentMethod;
     }) => {
-      const response = await api.post("/orders", data);
-      return response.data;
+      const paymentMethod = data.paymentMethod ?? "paystack";
+      const response = await api.post("/orders", {
+        orderData: {
+          ...data.orderData,
+          paymentMethod,
+        },
+        orderItems: data.orderItems,
+        paymentMethod,
+      });
+      return { ...response.data, paymentMethod };
     },
     onSuccess: (data) => {
-      console.log(data);
-
       setOrderData(data);
 
+      if (data.paymentMethod === "wallet") {
+        void queryClient.invalidateQueries({ queryKey: ["wallet"] });
+        return;
+      }
+
       setTimeout(() => {
-        initialisePayment({
+        void initialisePayment({
           paymentData: {
             email: String(user?.email),
             amount: String(data.order.totalPrice * 100),
           },
-          callback_url: "http://localhost:3000/shop",
+          callback_url:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/shop`
+              : "http://localhost:3000/shop",
           userId: String(user?.id),
           orderId: String(data?.order.id),
           storeId: data?.order.storeId,

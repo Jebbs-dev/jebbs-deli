@@ -1,6 +1,6 @@
 import { HeroSection } from "@/modules/landing/hero";
 import { MissionStrip } from "@/modules/landing/mission";
-import { MenuGrid } from "@/modules/landing/menu-grid";
+import { OnDeckSection } from "@/modules/landing/on-deck";
 import { CuisinesSection } from "@/modules/landing/cuisines";
 import { WhyDeli } from "@/modules/landing/why-deli";
 import { PillarsSection } from "@/modules/landing/pillars";
@@ -13,7 +13,7 @@ export function HomePage() {
       <main className="flex-grow">
         <HeroSection />
         <MissionStrip />
-        <MenuGrid />
+        <OnDeckSection />
         <CuisinesSection />
         <WhyDeli />
         <PillarsSection />

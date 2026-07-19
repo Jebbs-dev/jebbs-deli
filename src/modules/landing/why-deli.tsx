@@ -187,7 +187,7 @@ export function WhyDeli() {
           to="/shop"
           className="mt-10 inline-flex items-center gap-1.5 font-display text-sm font-semibold text-ash underline-offset-4 hover:underline hover:decoration-scotch hover:decoration-2"
         >
-          Browse this week&apos;s menu
+          Browse what&apos;s cooking
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>

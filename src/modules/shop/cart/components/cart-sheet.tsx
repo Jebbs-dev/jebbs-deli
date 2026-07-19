@@ -1,33 +1,16 @@
 "use client";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Cart, Product } from "@/types/types";
-import { Image } from "@unpic/react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Product } from "@/types/types";
 import useCartStore, { CartItemProps } from "@/store/cart";
-import CartItem from "./cart-item";
-import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
-import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { ArrowDown } from "lucide-react";
-import { useUpdateCart, useRemoveFromCart } from "../mutations/update-cart";
+import { useEffect } from "react";
 import { useAddToCart } from "../mutations/add-to-cart";
-import { useAuthFormModal } from "@/store/auth-form-modal";
 import AuthModal from "@/modules/auth/components/auth-modal";
 import { useFetchCart } from "../queries/fetch-cart";
 import CheckoutPage from "@/modules/checkout/components/checkout-page";
 import CartPage from "./cart-page";
 import { useCartViewStore } from "@/store/cart-data";
-
-interface CartProps {
-  isOpen: boolean;
-  setIsOpen(value: boolean): void;
-}
 
 export interface StoreTotal {
   storeId: string;
@@ -63,27 +46,23 @@ export interface FetchedCartData {
 }
 
 const CartSheet = () => {
-  const {
-    items,
-    totalAmount,
-    addItem,
-    removeItem,
-    clearCart,
-    clearVendorItems,
-  } = useCartStore();
+  const { items, totalAmount, clearCart } = useCartStore();
   const { isLoggedIn, user } = useAuthStore();
-  const { onAuthFormOpen } = useAuthFormModal();
 
   const { mutateAsync: addCart } = useAddToCart();
-  const { mutateAsync: updateCart } = useUpdateCart();
-  const { mutateAsync: removeCart } = useRemoveFromCart();
 
   const { data: fetchedCartData, isLoading } = useFetchCart(String(user?.id));
 
-  // Effect to sync local cart to backend when user logs in
+  const {
+    isOpen,
+    setIsOpen,
+    initializeCartData,
+    toggleCartView,
+    setToggleCartView,
+  } = useCartViewStore();
+
   useEffect(() => {
     if (isLoggedIn && user?.id && items.length > 0) {
-      // Small delay to ensure auth is fully complete
       const syncCartToBackend = setTimeout(async () => {
         try {
           const localStorageCart = JSON.parse(
@@ -100,9 +79,8 @@ const CartSheet = () => {
               userId: user.id,
             });
 
-            // Clear local storage cart after moving to backend
             localStorage.removeItem("jebbs-cart-storage");
-            clearCart(); // Clear the local cart store
+            clearCart();
           }
         } catch (error) {
           console.error("Failed to sync cart to backend:", error);
@@ -117,41 +95,35 @@ const CartSheet = () => {
     if (fetchedCartData || items) {
       initializeCartData(fetchedCartData, items, isLoggedIn);
     }
-  }, [fetchedCartData, items, isLoggedIn]);
-
-  const {
-    isOpen,
-    setIsOpen,
-    initializeCartData,
-    toggleCartView,
-    setToggleCartView,
-    cartItemsToUse,
-  } = useCartViewStore();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  }, [fetchedCartData, items, isLoggedIn, initializeCartData]);
 
   return (
     <>
       <AuthModal />
       <Sheet
         open={isOpen}
-        onOpenChange={() => {
-          setIsOpen(false);
+        onOpenChange={(open) => {
+          if (!open) setIsOpen(false);
         }}
       >
-        <SheetContent side="right" className="w-full sm:max-w-[500px]">
-          {toggleCartView === "cart" ? (
-            <CartPage
-              goToCheckout={() => {
-                setToggleCartView("checkout");
-              }}
-            />
-          ) : (
+        <SheetContent
+          side="right"
+          className="w-full border-l border-black/10 bg-white p-5 text-ash sm:max-w-[500px]"
+        >
+          {isLoading && isLoggedIn ? (
+            <div className="flex h-full items-center justify-center text-sm text-ash/50">
+              Loading checkout…
+            </div>
+          ) : toggleCartView === "checkout" ? (
             <CheckoutPage
               goToCart={() => {
                 setToggleCartView("cart");
+              }}
+            />
+          ) : (
+            <CartPage
+              goToCheckout={() => {
+                setToggleCartView("checkout");
               }}
             />
           )}

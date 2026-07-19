@@ -5,12 +5,11 @@ import Header from "@/modules/shop/components/header";
 
 export function ShopLayout() {
   return (
-    <div className="flex flex-col justify-between h-full overflow-hidden">
+    <div className="flex min-h-screen flex-col bg-white text-ash">
       <Header />
-      <main className="pb-10 pt-14 md:pt-10 bg-gray-50">
+      <main className="flex-1 bg-white pt-[7.25rem] md:pt-[5.75rem]">
         <Outlet />
       </main>
-      <hr className="my-6 border-gray-100" />
       <Footer />
     </div>
   );

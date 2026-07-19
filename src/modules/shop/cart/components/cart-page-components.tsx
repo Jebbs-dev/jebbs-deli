@@ -1,36 +1,20 @@
-import React, { Dispatch, SetStateAction } from "react";
-
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Cart, Product } from "@/types/types";
-import { Image } from "@unpic/react";
-import useCartStore, { CartItemProps } from "@/store/cart";
+import useCartStore from "@/store/cart";
 import CartItem from "./cart-item";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { ArrowDown } from "lucide-react";
-import { useUpdateCart, useRemoveFromCart } from "../mutations/update-cart";
-import { useAddToCart } from "../mutations/add-to-cart";
+import { useUpdateCart } from "../mutations/update-cart";
 import { useAuthFormModal } from "@/store/auth-form-modal";
-import AuthModal from "@/modules/auth/components/auth-modal";
-import { useFetchCart } from "../queries/fetch-cart";
-import { FetchedCartData, StoreTotal } from "./cart-sheet";
 import { useCartViewStore } from "@/store/cart-data";
-import { useFetchOrders } from "@/modules/checkout/queries/fetch-order-by-userId";
 
 interface VendorPageProps {
   storeId: string;
 }
+
 const CartPageComponents = ({ storeId }: VendorPageProps) => {
   const { mutateAsync: updateCart } = useUpdateCart();
 
-  const { addItem, removeItem, clearCart, clearVendorItems } = useCartStore();
+  const { addItem, removeItem, clearVendorItems } = useCartStore();
 
   const {
     storeTotals,
@@ -38,25 +22,25 @@ const CartPageComponents = ({ storeId }: VendorPageProps) => {
     setOpenStoreId,
     handleClearVendorItems,
     setToggleCartView,
-    typedCartData
+    typedCartData,
   } = useCartViewStore();
 
   const { onAuthFormOpen } = useAuthFormModal();
 
   const { isLoggedIn, user } = useAuthStore();
 
-  // Filter store totals to only include the current store
   const currentStore = storeTotals.find((store) => store.storeId === storeId);
 
   return (
-    <div className="flex flex-col justify-between h-full mb-3">
+    <div className="mb-3 flex h-full flex-col justify-between">
       <div className="overflow-auto">
         {currentStore ? (
-          <div className="mb-6 pb-6 rounded-xl">
-            <ul className="divide-y divide-gray-200 transition">
+          <div className="mb-6 pb-6">
+            <ul className="divide-y divide-ash/10">
               {currentStore.products.map((item) => (
                 <CartItem
                   key={item.id}
+                  tone="light"
                   items={{
                     ...item,
                     onRemove: () => removeItem(item.id),
@@ -68,20 +52,21 @@ const CartPageComponents = ({ storeId }: VendorPageProps) => {
             </ul>
           </div>
         ) : (
-          <div className="text-center py-10">
-            <div className="mx-auto w-[300px] h-[300px] flex items-center justify-center">
-              <div className="text-gray-400">
-                No items in the cart for this store.
-              </div>
-            </div>
+          <div className="flex flex-col items-center py-12 text-center">
+            <p className="font-display text-base font-semibold text-ash">
+              No items yet
+            </p>
+            <p className="mt-1 max-w-[28ch] text-sm text-ash/60">
+              Add dishes from this kitchen to build your order.
+            </p>
           </div>
         )}
       </div>
 
-      <div className="bottom-0 w-full border-t border-gray-200 px-4 pb-6 sm:px-6 mt-4">
-        <div className="flex justify-between text-base font-medium text-gray-900 mt-4">
-          <p>Total Amount</p>
-          <p>
+      <div className="mt-4 border-t border-ash/10 px-1 pb-6 pt-4">
+        <div className="flex justify-between text-base font-medium text-ash">
+          <p>Total</p>
+          <p className="font-mono">
             ₦
             {currentStore?.totalAmount
               ? formatNumberWithCommas(
@@ -90,39 +75,40 @@ const CartPageComponents = ({ storeId }: VendorPageProps) => {
               : Number(0.0).toFixed(2)}
           </p>
         </div>
-        <p className="mt-0.5 text-sm text-gray-500">
-          Shipping and taxes calculated at checkout.
+        <p className="mt-1 text-sm text-ash/55">
+          Delivery and fees calculated at checkout.
         </p>
-        <div className="my-6">
-          <div className="mt-4 flex flex-col gap-4">
-            <Button
-              className="bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600"
-              onClick={() => {
-                if (!isLoggedIn) {
-                  onAuthFormOpen();
-                } else {
-                  setToggleCartView("checkout");
-                  setOpenStoreId(openStoreId === storeId ? null : storeId);
-                }
-              }}
-            >
-              Proceed to checkout
-            </Button>
-            <Button
-              className="w-full bg-red-100 px-6 py-3 text-red-500 text-sm hover:bg-red-200"
-              onClick={() => {
-                handleClearVendorItems(
-                  storeId,
-                  isLoggedIn,
-                  String(user?.id),
-                  updateCart,
-                  clearVendorItems
-                );
-              }}
-            >
-              Clear all Items
-            </Button>
-          </div>
+        <div className="mt-4 flex flex-col gap-2">
+          <Button
+            type="button"
+            className="w-full rounded-md"
+            onClick={() => {
+              if (!isLoggedIn) {
+                onAuthFormOpen();
+              } else {
+                setToggleCartView("checkout");
+                setOpenStoreId(openStoreId === storeId ? null : storeId);
+              }
+            }}
+          >
+            Proceed to checkout
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full rounded-md border-ash/20 text-ash hover:bg-ash/5"
+            onClick={() => {
+              handleClearVendorItems(
+                storeId,
+                isLoggedIn,
+                String(user?.id),
+                updateCart,
+                clearVendorItems
+              );
+            }}
+          >
+            Clear all items
+          </Button>
         </div>
       </div>
     </div>

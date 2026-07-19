@@ -6,7 +6,6 @@ import useAuthStore from "@/store/auth";
 import { useUpdateCart } from "../mutations/update-cart";
 import { useFetchCart } from "../queries/fetch-cart";
 
-// Define types for cart data from the backend
 interface CartItem {
   id: string;
   quantity: number;
@@ -28,11 +27,14 @@ interface CartItemComponentProps {
   items: CartItemProps & {
     onRemove: () => void;
     onAdd: () => void;
-    cartId?: string; // Add cartId for backend operations
+    cartId?: string;
   };
+  /** dark = cart sheet (iroko); light = store side panel (paper) */
+  tone?: "dark" | "light";
 }
 
-const CartItem = ({ items }: CartItemComponentProps) => {
+const CartItem = ({ items, tone = "dark" }: CartItemComponentProps) => {
+  const light = tone === "light";
   const totalPrice = items.price * items.quantity;
   const { isLoggedIn, user } = useAuthStore();
   const { mutateAsync: updateCart } = useUpdateCart();
@@ -41,35 +43,30 @@ const CartItem = ({ items }: CartItemComponentProps) => {
   const handleAdd = async () => {
     if (isLoggedIn && user && items.cartId && cartData) {
       try {
-        // Extract all current cart items, transforming them into the format expected by the backend
-        const allCartItems = (cartData as CartData).cartGroups.flatMap((group: CartGroup) => 
-          group.cartItems.map((item: CartItem) => {
-            const isTargetItem = item.product.id === items.id;
-            return {
-              id: item.product.id,
-              quantity: isTargetItem ? item.quantity + 1 : item.quantity, // Increase this item's quantity
-              storeId: group.storeId,
-              productId: item.product.id
-            };
-          })
+        const allCartItems = (cartData as CartData).cartGroups.flatMap(
+          (group: CartGroup) =>
+            group.cartItems.map((item: CartItem) => {
+              const isTargetItem = item.product.id === items.id;
+              return {
+                id: item.product.id,
+                quantity: isTargetItem ? item.quantity + 1 : item.quantity,
+                storeId: group.storeId,
+                productId: item.product.id,
+              };
+            })
         );
-        
-        console.log("Increasing quantity for item:", items.id);
-        
-        // Calculate the new total price
+
         const newTotalPrice = allCartItems.reduce(
-          (sum: number, item: {id: string, quantity: number}) => {
-            // Find the original product to get the price
+          (sum: number, item: { id: string; quantity: number }) => {
             const product = (cartData as CartData).cartGroups
               .flatMap((g: CartGroup) => g.cartItems)
               .find((ci: CartItem) => ci.product.id === item.id)?.product;
-              
+
             return sum + (product?.price || 0) * item.quantity;
-          }, 
+          },
           0
         );
-        
-        // Send the complete updated cart to the backend
+
         await updateCart({
           cartId: items.cartId,
           userId: user.id,
@@ -80,7 +77,6 @@ const CartItem = ({ items }: CartItemComponentProps) => {
         console.error("Failed to update cart:", error);
       }
     } else {
-      // Use local cart state for non-authenticated users
       items.onAdd();
     }
   };
@@ -88,57 +84,42 @@ const CartItem = ({ items }: CartItemComponentProps) => {
   const handleRemove = async () => {
     if (isLoggedIn && user && items.cartId && cartData) {
       try {
-        // Extract all cart items, handling the removal properly
         const allCartItems = (cartData as CartData).cartGroups
-          // First, process each group
           .map((group: CartGroup) => {
-            // Process this group's items
             const processedItems = group.cartItems
-              // Keep only items we're not removing completely
               .filter((item: CartItem) => {
                 const isTargetItem = item.product.id === items.id;
-                // Keep if not the target item or if target item has quantity > 1
                 return !isTargetItem || (isTargetItem && item.quantity > 1);
               })
-              // Adjust quantities as needed
               .map((item: CartItem) => {
                 const isTargetItem = item.product.id === items.id;
                 return {
                   id: item.product.id,
                   quantity: isTargetItem ? item.quantity - 1 : item.quantity,
                   storeId: group.storeId,
-                  productId: item.product.id
+                  productId: item.product.id,
                 };
               });
-              
-            // Return the group and its processed items
+
             return {
               storeId: group.storeId,
-              items: processedItems
+              items: processedItems,
             };
           })
-          // Filter out any groups that now have zero items
-          .filter(group => group.items.length > 0)
-          // Flatten to get just the items
-          .flatMap(group => group.items);
-        
-        console.log("Decreasing/removing item:", items.id);
-        console.log("Remaining cart items:", allCartItems);
-        
-        // Calculate the new total price
+          .filter((group) => group.items.length > 0)
+          .flatMap((group) => group.items);
+
         const newTotalPrice = allCartItems.reduce(
-          (sum: number, item: {id: string, quantity: number}) => {
-            // Find the original product to get the price
+          (sum: number, item: { id: string; quantity: number }) => {
             const product = (cartData as CartData).cartGroups
               .flatMap((g: CartGroup) => g.cartItems)
               .find((ci: CartItem) => ci.product.id === item.id)?.product;
-              
+
             return sum + (product?.price || 0) * item.quantity;
-          }, 
+          },
           0
         );
-        
-        // Send the complete updated cart to the backend
+
         await updateCart({
           cartId: items.cartId,
           userId: user.id,
@@ -149,49 +130,108 @@ const CartItem = ({ items }: CartItemComponentProps) => {
         console.error("Failed to update cart:", error);
       }
     } else {
-      // Use local cart state for non-authenticated users
       items.onRemove();
     }
   };
 
   return (
-    <li className="flex py-6 px-2">
-      <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+    <li className="flex py-5">
+      <div
+        className={
+          light
+            ? "h-20 w-20 shrink-0 overflow-hidden rounded-md border border-ash/10 bg-iroko"
+            : "h-20 w-20 shrink-0 overflow-hidden rounded-md border border-cream/10 bg-ash"
+        }
+      >
         {items.image ? (
           <Image
             src={items.image}
             alt={items.name}
-            width={100}
-            height={100}
+            width={80}
+            height={80}
             className="h-full w-full object-cover object-center"
           />
         ) : (
-          <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-400">No image</span>
+          <div className="flex h-full w-full items-center justify-center">
+            <span
+              className={light ? "text-xs text-cream/40" : "text-xs text-cream/40"}
+            >
+              No image
+            </span>
           </div>
         )}
       </div>
 
       <div className="ml-4 flex flex-1 flex-col">
-        <div>
-          <div className="flex justify-between text-base font-medium text-gray-900">
-            <h3>{items.name}</h3>
-            <p className="ml-4">₦{formatNumberWithCommas(Number(totalPrice.toFixed(2)))}</p>
-          </div>
-          <p className="mt-1 text-sm text-gray-500">{items.store?.name}</p>
+        <div className="flex justify-between gap-3">
+          <h3
+            className={
+              light
+                ? "font-display text-sm font-semibold text-ash"
+                : "font-display text-sm font-semibold text-cream"
+            }
+          >
+            {items.name}
+          </h3>
+          <p
+            className={
+              light
+                ? "shrink-0 font-mono text-sm text-ash"
+                : "shrink-0 font-mono text-sm text-cream"
+            }
+          >
+            ₦{formatNumberWithCommas(Number(totalPrice.toFixed(2)))}
+          </p>
         </div>
-        <div className="flex flex-1 items-end justify-between text-sm">
-          <div className="flex items-center gap-2 bg-orange-50 rounded-full px-2">
+        {items.store?.name && (
+          <p
+            className={
+              light
+                ? "mt-1 text-sm text-ash/55"
+                : "mt-1 text-sm text-cream/55"
+            }
+          >
+            {items.store.name}
+          </p>
+        )}
+        <div className="mt-auto flex items-end justify-between pt-2">
+          <div
+            className={
+              light
+                ? "inline-flex items-center gap-1 rounded-md border border-ash/15 bg-white px-1"
+                : "inline-flex items-center gap-1 rounded-md border border-cream/15 bg-ash px-1"
+            }
+          >
             <button
+              type="button"
               onClick={handleRemove}
-              className="font-medium text-orange-400 hover:text-orange-500 w-8 h-8 rounded-full text-base cursor-pointer"
+              className={
+                light
+                  ? "flex h-8 w-8 items-center justify-center rounded-md text-base text-ash transition-colors hover:bg-paper hover:text-scotch"
+                  : "flex h-8 w-8 items-center justify-center rounded-md text-base text-cream transition-colors hover:bg-iroko hover:text-scotch"
+              }
+              aria-label="Decrease quantity"
             >
-              -
+              −
             </button>
-            <p className="text-gray-500">Qty {items.quantity}</p>
+            <span
+              className={
+                light
+                  ? "min-w-8 text-center font-mono text-xs text-ash/80"
+                  : "min-w-8 text-center font-mono text-xs text-cream/80"
+              }
+            >
+              {items.quantity}
+            </span>
             <button
+              type="button"
               onClick={handleAdd}
-              className="font-medium text-orange-400 hover:text-orange-500 w-8 h-8 rounded-full text-base cursor-pointer"
+              className={
+                light
+                  ? "flex h-8 w-8 items-center justify-center rounded-md text-base text-ash transition-colors hover:bg-paper hover:text-scotch"
+                  : "flex h-8 w-8 items-center justify-center rounded-md text-base text-cream transition-colors hover:bg-iroko hover:text-scotch"
+              }
+              aria-label="Increase quantity"
             >
               +
             </button>

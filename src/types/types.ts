@@ -23,12 +23,15 @@ export type Vendor = {
   isActive: boolean;
   createdAt: string;
   billboard?: string;
+  description?: string;
   openingTime?: string;
   closingTime?: string;
   rating?: string;
   preparationTime?: string;
   totalReviews?: string;
+  deliveryFee?: string | number;
   tags?: string[];
+  products?: Product[];
 }
 
 export type User = {

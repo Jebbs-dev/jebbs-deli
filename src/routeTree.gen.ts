@@ -16,6 +16,9 @@ import { Route as ShopRouteRouteImport } from './app/shop/route'
 import { Route as IndexRouteImport } from './app/index'
 import { Route as ShopIndexRouteImport } from './app/shop/index'
 import { Route as ShopStoreIdRouteImport } from './app/shop/$storeId'
+import { Route as ShopWalletRouteRouteImport } from './app/shop/wallet/route'
+import { Route as ShopWalletIndexRouteImport } from './app/shop/wallet/index'
+import { Route as ShopWalletTopupCallbackRouteImport } from './app/shop/wallet/topup/callback'
 
 const VendorsRoute = VendorsRouteImport.update({
   id: '/vendors',
@@ -52,6 +55,21 @@ const ShopStoreIdRoute = ShopStoreIdRouteImport.update({
   path: '/$storeId',
   getParentRoute: () => ShopRouteRoute,
 } as any)
+const ShopWalletRouteRoute = ShopWalletRouteRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => ShopRouteRoute,
+} as any)
+const ShopWalletIndexRoute = ShopWalletIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ShopWalletRouteRoute,
+} as any)
+const ShopWalletTopupCallbackRoute = ShopWalletTopupCallbackRouteImport.update({
+  id: '/topup/callback',
+  path: '/topup/callback',
+  getParentRoute: () => ShopWalletRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,8 +77,11 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/vendors': typeof VendorsRoute
+  '/shop/wallet': typeof ShopWalletRouteRouteWithChildren
   '/shop/$storeId': typeof ShopStoreIdRoute
   '/shop/': typeof ShopIndexRoute
+  '/shop/wallet/': typeof ShopWalletIndexRoute
+  '/shop/wallet/topup/callback': typeof ShopWalletTopupCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,6 +90,8 @@ export interface FileRoutesByTo {
   '/vendors': typeof VendorsRoute
   '/shop/$storeId': typeof ShopStoreIdRoute
   '/shop': typeof ShopIndexRoute
+  '/shop/wallet': typeof ShopWalletIndexRoute
+  '/shop/wallet/topup/callback': typeof ShopWalletTopupCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,8 +100,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/vendors': typeof VendorsRoute
+  '/shop/wallet': typeof ShopWalletRouteRouteWithChildren
   '/shop/$storeId': typeof ShopStoreIdRoute
   '/shop/': typeof ShopIndexRoute
+  '/shop/wallet/': typeof ShopWalletIndexRoute
+  '/shop/wallet/topup/callback': typeof ShopWalletTopupCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,10 +114,21 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/vendors'
+    | '/shop/wallet'
     | '/shop/$storeId'
     | '/shop/'
+    | '/shop/wallet/'
+    | '/shop/wallet/topup/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/contact' | '/vendors' | '/shop/$storeId' | '/shop'
+  to:
+    | '/'
+    | '/auth'
+    | '/contact'
+    | '/vendors'
+    | '/shop/$storeId'
+    | '/shop'
+    | '/shop/wallet'
+    | '/shop/wallet/topup/callback'
   id:
     | '__root__'
     | '/'
@@ -99,8 +136,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/vendors'
+    | '/shop/wallet'
     | '/shop/$storeId'
     | '/shop/'
+    | '/shop/wallet/'
+    | '/shop/wallet/topup/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -162,15 +202,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopStoreIdRouteImport
       parentRoute: typeof ShopRouteRoute
     }
+    '/shop/wallet': {
+      id: '/shop/wallet'
+      path: '/wallet'
+      fullPath: '/shop/wallet'
+      preLoaderRoute: typeof ShopWalletRouteRouteImport
+      parentRoute: typeof ShopRouteRoute
+    }
+    '/shop/wallet/': {
+      id: '/shop/wallet/'
+      path: '/'
+      fullPath: '/shop/wallet/'
+      preLoaderRoute: typeof ShopWalletIndexRouteImport
+      parentRoute: typeof ShopWalletRouteRoute
+    }
+    '/shop/wallet/topup/callback': {
+      id: '/shop/wallet/topup/callback'
+      path: '/topup/callback'
+      fullPath: '/shop/wallet/topup/callback'
+      preLoaderRoute: typeof ShopWalletTopupCallbackRouteImport
+      parentRoute: typeof ShopWalletRouteRoute
+    }
   }
 }
 
+interface ShopWalletRouteRouteChildren {
+  ShopWalletIndexRoute: typeof ShopWalletIndexRoute
+  ShopWalletTopupCallbackRoute: typeof ShopWalletTopupCallbackRoute
+}
+
+const ShopWalletRouteRouteChildren: ShopWalletRouteRouteChildren = {
+  ShopWalletIndexRoute: ShopWalletIndexRoute,
+  ShopWalletTopupCallbackRoute: ShopWalletTopupCallbackRoute,
+}
+
+const ShopWalletRouteRouteWithChildren = ShopWalletRouteRoute._addFileChildren(
+  ShopWalletRouteRouteChildren,
+)
+
 interface ShopRouteRouteChildren {
+  ShopWalletRouteRoute: typeof ShopWalletRouteRouteWithChildren
   ShopStoreIdRoute: typeof ShopStoreIdRoute
   ShopIndexRoute: typeof ShopIndexRoute
 }
 
 const ShopRouteRouteChildren: ShopRouteRouteChildren = {
+  ShopWalletRouteRoute: ShopWalletRouteRouteWithChildren,
   ShopStoreIdRoute: ShopStoreIdRoute,
   ShopIndexRoute: ShopIndexRoute,
 }

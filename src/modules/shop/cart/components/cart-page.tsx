@@ -1,28 +1,15 @@
-import React, { Dispatch, SetStateAction } from "react";
-
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Cart, Product } from "@/types/types";
-import { Image } from "@unpic/react";
-import useCartStore, { CartItemProps } from "@/store/cart";
+import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import useCartStore from "@/store/cart";
 import CartItem from "./cart-item";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { ArrowDown } from "lucide-react";
-import { useUpdateCart, useRemoveFromCart } from "../mutations/update-cart";
-import { useAddToCart } from "../mutations/add-to-cart";
+import { ChevronDown } from "lucide-react";
+import { useUpdateCart } from "../mutations/update-cart";
 import { useAuthFormModal } from "@/store/auth-form-modal";
 import AuthModal from "@/modules/auth/components/auth-modal";
-import { useFetchCart } from "../queries/fetch-cart";
-import { FetchedCartData, StoreTotal } from "./cart-sheet";
 import { useCartViewStore } from "@/store/cart-data";
-import { useFetchOrders } from "@/modules/checkout/queries/fetch-order-by-userId";
+import { cn } from "@/lib/utils";
 
 interface CartProps {
   goToCheckout: () => void;
@@ -30,9 +17,7 @@ interface CartProps {
 
 const CartPage = ({ goToCheckout }: CartProps) => {
   const { mutateAsync: updateCart } = useUpdateCart();
-
-  const { addItem, removeItem, clearCart, clearVendorItems, items } =
-    useCartStore();
+  const { addItem, removeItem, clearCart, clearVendorItems } = useCartStore();
 
   const {
     setIsOpen,
@@ -45,164 +30,160 @@ const CartPage = ({ goToCheckout }: CartProps) => {
   } = useCartViewStore();
 
   const { onAuthFormOpen } = useAuthFormModal();
-
   const { isLoggedIn, user } = useAuthStore();
 
   return (
     <>
       <AuthModal />
 
-      <SheetHeader className="mb-4">
-        <SheetTitle>My Cart</SheetTitle>
+      <SheetHeader className="mb-4 space-y-1 text-left">
+        <SheetTitle className="text-xl font-semibold text-ash">
+          Your cart
+        </SheetTitle>
+        {cartItemsToUse.length === 0 && (
+          <p className="text-sm text-ash/60">
+            Add a dish from the menu to get started.
+          </p>
+        )}
       </SheetHeader>
 
-      <div className="flex flex-col justify-between h-full mb-3">
+      <div className="mb-3 flex h-full flex-col justify-between">
         <div className="overflow-auto">
-          {storeTotals.map((store) => (
-            <div
-              key={store.storeId}
-              className="mb-6 border border-gray-200 p-6 rounded-xl"
-            >
-              <div className="flex flex-col items-start gap-2 mb-2 bg-orange-50 p-2 rounded-md">
-                <div className="flex flex-row justify-between w-full">
-                  <h3 className="font-medium text-orange-700">
-                    {store.vendorStoreName}
-                  </h3>
-
-                  <p
-                    className="flex flex-row items-center text-sm text-orange-600 cursor-pointer"
-                    onClick={() =>
-                      setOpenStoreId(
-                        openStoreId === store.storeId ? null : store.storeId
-                      )
-                    }
-                  >
-                    Show selection
-                    <ArrowDown className="ml-2" size={18} />{" "}
-                  </p>
-                </div>
-                <div className="flex gap-4 items-center">
-                  <span className="text-sm text-orange-600">
-                    ₦
-                    {formatNumberWithCommas(
-                      Number(store.totalAmount.toFixed(2))
-                    )}
-                  </span>
-                  <span className="text-sm text-orange-600 border-l pl-4 border-orange-200">
-                    {store.totalQuantity}{" "}
-                    {store.totalQuantity === 1 ? "item" : "items"}
-                  </span>
-                </div>
-              </div>
-              {openStoreId === store.storeId && (
-                <ul className="divide-y divide-gray-200 transition">
-                  {store.products.map((item) => (
-                    <CartItem
-                      key={item.id}
-                      items={{
-                        ...item,
-                        onRemove: () => removeItem(item.id),
-                        onAdd: () => addItem(item),
-                        cartId: isLoggedIn ? typedCartData?.id : undefined,
-                      }}
-                    />
-                  ))}
-                </ul>
-              )}
-              <div className="mt-4 flex flex-col gap-4">
-                <Button
-                  className="bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600"
-                  onClick={() => {
-                    if (!isLoggedIn) {
-                      setIsOpen(false);
-                      onAuthFormOpen();
-                    } else {
-                      goToCheckout();
-                      setOpenStoreId(
-                        openStoreId === store.storeId ? null : store.storeId
-                      );
-                    }
-                  }}
-                >
-                  Proceed to checkout
-                </Button>
-                <Button
-                  className="w-full bg-red-100 px-6 py-3 text-red-500 text-sm hover:bg-red-200"
-                  onClick={() => {
-                    // handleClearVendorItems(store.storeId)
-
-                    handleClearVendorItems(
-                      store.storeId,
-                      isLoggedIn,
-                      String(user?.id),
-                      updateCart,
-                      clearVendorItems
-                    );
-                  }}
-                >
-                  Clear {store.vendorStoreName}&apos;s Items
-                </Button>
-              </div>
+          {storeTotals.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="text-lg font-semibold text-ash">Cart is empty</p>
+              <p className="mt-2 max-w-[28ch] text-sm text-ash/60">
+                Browse dishes and tap Add — your order builds here.
+              </p>
             </div>
-          ))}
+          ) : (
+            storeTotals.map((store) => {
+              const expanded = openStoreId === store.storeId;
+              return (
+                <div
+                  key={store.storeId}
+                  className="mb-4 rounded-xl border border-black/10 bg-white p-4"
+                >
+                  <div className="mb-3 rounded-lg bg-[#f5f5f5] p-3">
+                    <div className="flex w-full items-start justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-ash">
+                        {store.vendorStoreName}
+                      </h3>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-ash/60 hover:text-scotch"
+                        onClick={() =>
+                          setOpenStoreId(expanded ? null : store.storeId)
+                        }
+                      >
+                        {expanded ? "Hide" : "Show"}
+                        <ChevronDown
+                          className={cn(
+                            "size-3.5 transition-transform duration-200",
+                            expanded && "rotate-180"
+                          )}
+                        />
+                      </button>
+                    </div>
+                    <div className="mt-2 flex items-center gap-3 text-xs text-ash/70">
+                      <span>
+                        ₦
+                        {formatNumberWithCommas(
+                          Number(store.totalAmount.toFixed(2))
+                        )}
+                      </span>
+                      <span className="border-l border-black/10 pl-3">
+                        {store.totalQuantity}{" "}
+                        {store.totalQuantity === 1 ? "item" : "items"}
+                      </span>
+                    </div>
+                  </div>
+                  {expanded && (
+                    <ul className="divide-y divide-black/5">
+                      {store.products.map((item) => (
+                        <CartItem
+                          key={item.id}
+                          tone="light"
+                          items={{
+                            ...item,
+                            onRemove: () => removeItem(item.id),
+                            onAdd: () => addItem(item),
+                            cartId: isLoggedIn ? typedCartData?.id : undefined,
+                          }}
+                        />
+                      ))}
+                    </ul>
+                  )}
+                  <div className="mt-4 flex flex-col gap-2">
+                    <Button
+                      type="button"
+                      className="w-full rounded-lg"
+                      onClick={() => {
+                        if (!isLoggedIn) {
+                          setIsOpen(false);
+                          onAuthFormOpen();
+                        } else {
+                          goToCheckout();
+                          setOpenStoreId(
+                            openStoreId === store.storeId
+                              ? null
+                              : store.storeId
+                          );
+                        }
+                      }}
+                    >
+                      Proceed to checkout
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full rounded-lg border-black/10"
+                      onClick={() => {
+                        handleClearVendorItems(
+                          store.storeId,
+                          isLoggedIn,
+                          String(user?.id),
+                          updateCart,
+                          clearVendorItems
+                        );
+                      }}
+                    >
+                      Clear {store.vendorStoreName}&apos;s items
+                    </Button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
-        <div className="bottom-0 w-full border-t border-gray-200 px-4 pb-6 sm:px-6 mt-4">
-          {/* <div className="flex justify-between text-base font-medium text-gray-900 mt-4">
-            <p>Total Amount</p>
-            <p>₦{formatNumberWithCommas(Number(cartTotal.toFixed(2)))}</p>
-          </div>
-          <p className="mt-0.5 text-sm text-gray-500">
-            Shipping and taxes calculated at checkout.
-          </p> */}
-          <div className="my-6">
-            {/* <Button
-              
-              className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600"
-              onClick={() => {
-                if (!isLoggedIn) {
-                  onAuthFormOpen();
+        {cartItemsToUse.length > 0 && (
+          <div className="mt-4 border-t border-black/10 px-1 pb-4 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10"
+              onClick={async () => {
+                if (isLoggedIn && user?.id && typedCartData?.id) {
+                  try {
+                    await updateCart({
+                      cartId: typedCartData.id,
+                      userId: user.id,
+                      cartItems: [],
+                      totalPrice: 0,
+                    });
+                  } catch (error) {
+                    console.error("Failed to clear cart:", error);
+                  }
                 } else {
-                  goToCheckout();
+                  clearCart();
                 }
               }}
             >
-              Proceed to checkout
-            </Button> */}
-            {cartItemsToUse.length > 0 && (
-              <Button
-                className="mt-3 w-full bg-red-200 px-6 py-3 text-red-500 text-sm hover:bg-red-300"
-                onClick={async () => {
-                  if (isLoggedIn && user?.id && typedCartData?.id) {
-                    try {
-                      console.log(
-                        "Clearing all items from cart - removing all cart groups"
-                      );
-
-                      // Clear the backend cart by sending an empty items array
-                      // This will remove all cart groups since there are no items
-                      const result = await updateCart({
-                        cartId: typedCartData.id,
-                        userId: user.id,
-                        cartItems: [], // Empty array will clear all cart groups
-                        totalPrice: 0,
-                      });
-
-                      console.log("Clear all items result:", result);
-                    } catch (error) {
-                      console.error("Failed to clear cart:", error);
-                    }
-                  } else {
-                    // Clear the local cart
-                    clearCart();
-                  }
-                }}
-              >
-                Clear All Items
-              </Button>
-            )}
+              Clear all items
+            </Button>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

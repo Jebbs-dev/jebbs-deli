@@ -43,9 +43,7 @@ export function CuisinesSection() {
               to="/shop"
               search={{
                 category:
-                  SHOP_CATEGORY_BY_LANDING[
-                    cuisine.label as keyof typeof SHOP_CATEGORY_BY_LANDING
-                  ],
+                  SHOP_CATEGORY_BY_LANDING[cuisine.label],
               }}
               className="group relative flex min-h-[320px] flex-col justify-end overflow-hidden md:min-h-[420px]"
             >

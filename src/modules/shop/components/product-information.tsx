@@ -1,18 +1,22 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
-import useCartStore from "@/store/cart";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useAddProductToCart } from "@/modules/shop/hooks/use-add-product-to-cart";
 import { Product } from "@/types/types";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
-import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Clock } from "lucide-react";
 
 interface ProductInformationProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  product: Product; // replace with actual product type when available
+  product: Product | null | undefined;
 }
 
 const ProductInformation = ({
@@ -20,82 +24,96 @@ const ProductInformation = ({
   setIsOpen,
   product,
 }: ProductInformationProps) => {
-  const { addItem } = useCartStore();
-  const { toast } = useToast();
+  const { addProductToCart, isPending } = useAddProductToCart();
 
-  const handleAddToCart = (product: any) => {
-    addItem(product);
-    toast({
-      description: `${product.name} added to cart!`,
-    });
-  };
+  if (!product) return null;
 
   return (
-    <div>
-      <Dialog open={isOpen} onOpenChange={() => setIsOpen(false)}>
-        <DialogContent className="h-[450px] w-full sm:max-w-[500px] lg:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>
-              <DialogDescription>Product Information</DialogDescription>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-row w-full pb-3 gap-3">
-            <div className="w-[65%] relative rounded-md bg-gray-300 aspect-[4/3]">
-              {product?.image ? (
-                <Image
-                  src={product.image}
-                  alt="Product Image"
-                  width={100}
-                  height={100}
-                  className="w-full h-full object-cover rounded-md"
-                />
-              ) : (
-                <Image
-                  src="/images/image-placeholder.png"
-                  alt="Image placeholder"
-                  width={40}
-                  height={40}
-                  className="relative mx-auto top-[40%] opacity-40 rounded-md"
-                />
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-iroko bg-iroko p-0 text-cream sm:max-w-[500px] lg:max-w-[800px]">
+        <div className="flex flex-col gap-0 lg:flex-row">
+          <div className="relative aspect-[4/3] w-full bg-ash lg:w-[55%] lg:aspect-auto lg:min-h-[320px]">
+            {product.image ? (
+              <Image
+                src={product.image}
+                alt={product.name}
+                width={480}
+                height={360}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Image
+                src="/images/image-placeholder.png"
+                alt=""
+                width={40}
+                height={40}
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-40"
+              />
+            )}
+          </div>
+
+          <div className="flex flex-1 flex-col gap-4 p-5 lg:p-6">
+            <DialogHeader className="space-y-2 text-left">
+              <DialogTitle className="font-display text-xl font-semibold text-cream">
+                {product.name}
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                Details for {product.name}
+              </DialogDescription>
+              <p className="font-mono text-sm tracking-wide text-scotch">
+                ₦
+                {formatNumberWithCommas(
+                  Number(Number(product.price).toFixed(2))
+                )}
+              </p>
+              {product.store?.preparationTime && (
+                <p className="inline-flex items-center gap-1.5 font-mono text-xs tracking-wide text-cream/65">
+                  <Clock className="size-3.5" aria-hidden />
+                  {product.store.preparationTime}
+                </p>
               )}
-            </div>
-            <div className="w-[35%] flex flex-col gap-2 flex-grow">
-              <p className="text-orange-400">{product?.name}</p>
-              <p className="text-sm text-gray-500">
-                ₦{formatNumberWithCommas(Number(product?.price.toFixed(2)))}
-              </p>
-              <span className="text-orange-400">Description</span>
-              <p className="text-sm text-gray-500 line-clamp-6">
-                {product?.description}
-              </p>
-              <div className="flex-grow">
-                <span className="text-orange-400">Vendor</span>{" "}
+            </DialogHeader>
+
+            {product.description && (
+              <div>
+                <p className="mb-1 text-sm font-medium text-cream/80">
+                  Description
+                </p>
+                <p className="line-clamp-6 text-sm leading-relaxed text-cream/65">
+                  {product.description}
+                </p>
+              </div>
+            )}
+
+            {product.store?.id && (
+              <div>
+                <p className="mb-1 text-sm font-medium text-cream/80">Kitchen</p>
                 <Link
                   to="/shop/$storeId"
-                  params={{ storeId: String(product?.store?.id) }}
-                  className="hover:underline"
+                  params={{ storeId: String(product.store.id) }}
+                  onClick={() => setIsOpen(false)}
+                  className="inline-flex items-center gap-1 text-sm text-cream transition-colors hover:text-scotch"
                 >
-                  <p className="text-sm flex flex-row items-center gap-1">
-                    <span>{product?.store?.name}</span>
-                    <span>
-                      <ArrowRight width={15} />
-                    </span>
-                  </p>
+                  {product.store.name}
+                  <ArrowRight className="size-3.5" aria-hidden />
                 </Link>
               </div>
-              <Button
-                className="bg-orange-400 mt-4 ring-0"
-                onClick={() => {
-                  handleAddToCart(product);
-                }}
-              >
-                Add to Cart
-              </Button>
-            </div>
+            )}
+
+            <Button
+              type="button"
+              className="mt-auto w-full rounded-md"
+              disabled={isPending}
+              onClick={() => {
+                void addProductToCart(product);
+              }}
+            >
+              Add to cart
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

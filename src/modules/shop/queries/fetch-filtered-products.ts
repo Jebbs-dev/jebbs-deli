@@ -1,5 +1,6 @@
 import api from "@/utils/api";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { Product } from "@/types/types";
 
 type ProductParams = {
   search?: string;
@@ -8,13 +9,24 @@ type ProductParams = {
   [key: string]: string | boolean | number | undefined;
 };
 
+type ProductsResponse = {
+  products?: Product[];
+  items?: Product[];
+  total?: number;
+  limit?: number;
+  offset?: number;
+};
+
 export const useFetchFilteredProduct = (params: ProductParams) => {
   return useQuery({
-    queryKey: ["products", params], // 👈 include params in the key!
+    queryKey: ["products", params],
     queryFn: async () => {
-      const response = await api.get("/products", { params });
-      return response.data;
+      const response = await api.get<ProductsResponse>("/products", { params });
+      const data = response.data;
+      return {
+        ...data,
+        products: data.products ?? data.items ?? [],
+      };
     },
-    // keepPreviousData: true, // optional: smooth transitions
   });
 };

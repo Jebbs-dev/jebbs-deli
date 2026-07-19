@@ -1,32 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import CartSheet, { FetchedCartData } from "../cart/components/cart-sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  ChevronDown,
-  ChevronRight,
-  FileClock,
-  LogOut,
-  MapPin,
-  Settings,
-} from "lucide-react";
+import { ChevronDown, MapPin, Search } from "lucide-react";
 import useAuthStore from "@/store/auth";
 import { useFetchCart } from "../cart/queries/fetch-cart";
 import useCartStore from "@/store/cart";
-import { useCartViewStore } from "@/store/cart-data";
 import {
   Dialog,
   DialogContent,
@@ -37,32 +18,20 @@ import {
 import PlacesAutocomplete from "@/components/map/places-autocomplete";
 import { useFetchUserInformation } from "@/modules/user/queries/fetch-user-information";
 import OrderHistory from "@/modules/checkout/components/order-history";
-import { useAuthFormModal } from "@/store/auth-form-modal";
 import { useQueryParamaters } from "@/store/use-query-parameters";
+import { ProfilePopover } from "./profile-popover";
+import { CartPopover } from "../cart/components/cart-popover";
 
 export type Prediction = google.maps.places.AutocompletePrediction;
 
 const Header = () => {
   const [input, setInput] = useState("");
   const [predictions, setPredictions] = useState<Prediction[]>([]);
-
-  const { setIsOpen, setIsOrderHistoryOpen } =
-    useCartViewStore();
-
-  const [dropdownOpen, setIsDropdownOpen] = useState(false);
-
-  const { querykey, setQueryKey } = useQueryParamaters();
-
-  // In your JSX
-
-  const { user, isLoggedIn, logout } = useAuthStore();
-  const { onAuthFormOpen } = useAuthFormModal();
+  const { setQueryKey } = useQueryParamaters();
+  const { user, isLoggedIn } = useAuthStore();
   const { data: userInformation } = useFetchUserInformation(String(user?.id));
-
   const { totalItems } = useCartStore();
-  const navigate = useNavigate();
 
-  // Fetch cart data
   const { data: fetchedCartData } = useFetchCart(
     user?.id ? String(user.id) : ""
   );
@@ -71,34 +40,37 @@ const Header = () => {
       ?.flatMap((group) => group.cartItems)
       .reduce((sum, item) => sum + item.quantity, 0) || 0;
 
+  const cartCount = isLoggedIn ? totalCartItems : totalItems;
+
   return (
     <>
       <CartSheet />
       <OrderHistory />
-      <header className="border-b border-x-gray-100 fixed w-full left-0 z-50 bg-white">
-        <div className="w-full bg-white flex justify-between h-[75px] md:h-[81px] px-4 md:px-10 mx-auto py-4">
-          <div className="flex md:flex-row gap-10">
-            <Link to="/shop" className="flex items-center">
-              <h1 className="mx-auto md:top-10 md:left-10 text-black text-2xl md:text-3xl">
-                deli<span className="text-orange-400">.</span>
-              </h1>
+      <header className="fixed left-0 top-0 z-50 w-full border-b border-black/5 bg-white">
+        <div className="mx-auto flex h-[72px] w-full max-w-[1280px] items-center justify-between gap-4 px-4 md:h-[81px] md:px-8">
+          <div className="flex min-w-0 items-center gap-4 md:gap-8">
+            <Link to="/shop" className="shrink-0">
+              <span className="font-display text-2xl font-bold text-ash md:text-[1.75rem]">
+                deli<span className="text-scotch">.</span>
+              </span>
             </Link>
 
-            <Dialog
-            >
-              <DialogTrigger className="flex flex-row items-center gap-2">
-                <MapPin className="text-green-600" size={18} />
-                <p className="text-sm">{userInformation?.address} </p>
-                <ChevronDown size={18} />
+            <Dialog>
+              <DialogTrigger className="flex min-w-0 max-w-[10rem] items-center gap-1.5 text-left text-ash/80 transition-colors hover:text-ash sm:max-w-xs">
+                <MapPin className="shrink-0 text-scotch" size={18} />
+                <p className="truncate text-sm font-medium">
+                  {userInformation?.address || "Set delivery address"}
+                </p>
+                <ChevronDown size={16} className="shrink-0 opacity-50" />
               </DialogTrigger>
-              <DialogContent className="h-[500px] p-10">
+              <DialogContent className="border-black/10 bg-white p-8 text-ash sm:max-w-lg">
                 <DialogHeader className="flex flex-col gap-5">
-                  <DialogTitle className="text-lg md:text-2xl text-left font-semibold text-orange-400">
+                  <DialogTitle className="text-left text-xl font-semibold text-ash md:text-2xl">
                     Delivery Address
                   </DialogTitle>
-                  <div className="relative text-gray-600 w-full">
-                    <span className="absolute top-0 bottom-0 left-2 flex items-center">
-                      <MapPin className="text-green-600" />
+                  <div className="relative w-full">
+                    <span className="pointer-events-none absolute inset-y-0 left-2 z-10 flex items-center">
+                      <MapPin className="text-scotch" size={18} />
                     </span>
                     <PlacesAutocomplete
                       input={input}
@@ -111,186 +83,37 @@ const Header = () => {
               </DialogContent>
             </Dialog>
           </div>
-          <div className="flex items-center space-x-5">
-            <div className="relative text-gray-600  hidden md:flex">
-              <span className="absolute top-0.5 bottom-0 left-0 flex items-center">
-                <Button
-                  type="submit"
-                  className="bg-transparent hover:bg-transparent"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M10 17C13.866 17 17 13.866 17 10C17 6.13401 13.866 3 10 3C6.13401 3 3 6.13401 3 10C3 13.866 6.13401 17 10 17Z"
-                      stroke="#0C513F"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    ></path>
-                    <path
-                      d="M15 15L21 21"
-                      stroke="#0C513F"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    ></path>
-                  </svg>
-                </Button>
-              </span>
+
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="relative hidden md:block">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ash/40"
+                aria-hidden
+              />
               <Input
-                className="pl-10 w-80 py-2"
-                onChange={(e) => {
-                  setQueryKey(e.target.value);
-                }}
+                placeholder="Search kitchens or dishes"
+                aria-label="Search kitchens or dishes"
+                className="h-10 w-72 rounded-full border-black/10 bg-[#f5f5f5] pl-10 text-ash placeholder:text-ash/40 focus-visible:ring-scotch"
+                onChange={(e) => setQueryKey(e.target.value)}
               />
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Button
-                className="relative bg-orange-400 flex items-center justify-center rounded-full w-[30px] h-[30px] md:w-[45px] md:h-[45px] text-white shadow-indigo-500/40"
-                aria-label="Cart"
-                onClick={() => {
-                  setIsOpen(true);
-                }}
-              >
-                <svg
-                  stroke="currentColor"
-                  fill="currentColor"
-                  stroke-width="0"
-                  viewBox="0 0 24 24"
-                  height="22"
-                  width="22"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M21.822 7.431A1 1 0 0 0 21 7H7.333L6.179 4.23A1.994 1.994 0 0 0 4.333 3H2v2h2.333l4.744 11.385A1 1 0 0 0 10 17h8c.417 0 .79-.259.937-.648l3-8a1 1 0 0 0-.115-.921zM17.307 15h-6.64l-2.5-6h11.39l-2.25 6z"></path>
-                  <circle cx="10.5" cy="19.5" r="1.5"></circle>
-                  <circle cx="17.5" cy="19.5" r="1.5"></circle>
-                </svg>
-                {(isLoggedIn ? totalCartItems : totalItems) > 0 && (
-                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1">
-                    {totalCartItems || totalItems}
-                  </span>
-                )}
-              </Button>
-
-              <DropdownMenu
-                open={dropdownOpen}
-                onOpenChange={() => setIsDropdownOpen(false)}
-              >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    className="relative bg-orange-400 flex items-center justify-center rounded-full w-[30px] h-[30px] md:w-[45px] md:h-[45px] shadow-indigo-500/40"
-                    aria-label="User Icon"
-                    onClick={() => setIsDropdownOpen(true)}
-                  >
-                    <svg
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21"
-                        stroke="#fff"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      ></path>
-                      <path
-                        d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"
-                        stroke="#fff"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      ></path>
-                    </svg>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        isLoggedIn
-                          ? setIsOrderHistoryOpen(true)
-                          : onAuthFormOpen();
-                      }}
-                    >
-                      Order History
-                      <DropdownMenuShortcut>
-                        <FileClock size={18} />
-                      </DropdownMenuShortcut>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
-                      Settings
-                      <DropdownMenuShortcut>
-                        <Settings size={18} />
-                      </DropdownMenuShortcut>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => {
-                        logout();
-                        setIsOpen(false);
-                        navigate({ to: "/shop" });
-                      }}
-                    >
-                      Logout
-                      <DropdownMenuShortcut>
-                        <LogOut size={18} />
-                      </DropdownMenuShortcut>
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <CartPopover cartCount={cartCount} />
+            <ProfilePopover />
           </div>
         </div>
-        <div className="flex justify-center mb-2 md:hidden">
-          <div className="relative text-gray-600">
-            <span className="absolute top-0.5 bottom-0 left-0 flex items-center">
-              <Button
-                type="submit"
-                className="bg-transparent hover:bg-transparent"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M10 17C13.866 17 17 13.866 17 10C17 6.13401 13.866 3 10 3C6.13401 3 3 6.13401 3 10C3 13.866 6.13401 17 10 17Z"
-                    stroke="#0C513F"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></path>
-                  <path
-                    d="M15 15L21 21"
-                    stroke="#0C513F"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  ></path>
-                </svg>
-              </Button>
-            </span>
+
+        <div className="border-t border-black/5 px-4 pb-3 md:hidden">
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ash/40"
+              aria-hidden
+            />
             <Input
-              className="pl-10 w-80 py-2"
-              onChange={(e) => {
-                setQueryKey(e.target.value);
-              }}
+              placeholder="Search kitchens or dishes"
+              aria-label="Search kitchens or dishes"
+              className="h-10 w-full rounded-full border-black/10 bg-[#f5f5f5] pl-10 text-ash placeholder:text-ash/40 focus-visible:ring-scotch"
+              onChange={(e) => setQueryKey(e.target.value)}
             />
           </div>
         </div>

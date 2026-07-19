@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useFetchVendorStoreById } from "@/modules/shop/queries/fetch-vendor-store-by-id";
 import { useCartViewStore } from "@/store/cart-data";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import {
@@ -11,16 +10,19 @@ import {
   ChevronRight,
   CircleAlert,
   MapPin,
+  Wallet,
 } from "lucide-react";
-import React, { useEffect } from "react";
-import { useCreateOrder } from "@/modules/checkout/mutations/create-order";
+import { useState } from "react";
+import {
+  useCreateOrder,
+  type OrderPaymentMethod,
+} from "@/modules/checkout/mutations/create-order";
 import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
-import useAuthStore from "@/store/auth";
 import { FaSpinner } from "react-icons/fa";
 import { useToast } from "@/hooks/use-toast";
-import { useInitialisePayment } from "../mutations/initiate-payment";
-import { useOrderData } from "@/store/order";
-import PaymentLinkModal from "./payment-link-modal";
+import { useFetchWallet } from "@/modules/wallet/queries/fetch-wallet";
+import { Link } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
 
 interface DeliveryInformationProps {
   thresholdInKm: number;
@@ -42,32 +44,33 @@ const DeliveryInformation = ({
   const { storeTotals, cartTotal, typedCartData, setIsOpen } =
     useCartViewStore();
 
-  const {
-    mutateAsync: createOrder,
-    isPending: isOrderCreationPending,
-    isSuccess: isOrderCreated,
-  } = useCreateOrder();
+  const { mutateAsync: createOrder, isPending: isOrderCreationPending } =
+    useCreateOrder();
 
   const { toast } = useToast();
-
-  const { user } = useAuthStore();
-
-  const { orderData: order } = useOrderData();
+  const { data: wallet } = useFetchWallet();
+  const [paymentMethod, setPaymentMethod] =
+    useState<OrderPaymentMethod>("paystack");
 
   const { mutateAsync: updateCart, isPending: isCartUpdatePending } =
     useUpdateCart();
 
-  const {
-    isPending: isPaymentInitialisationPending,
-  } = useInitialisePayment();
-
-  // const thresholdInKm = 15;
-  // const distanceToVendor = 14;
   const deliveryFee = 3000;
   const serviceFee = 0.1 * cartTotal;
   const totalOrderCost = deliveryFee + serviceFee + cartTotal;
+  const walletBalance = Number(wallet?.balance ?? 0);
+  const canPayWithWallet = walletBalance >= totalOrderCost;
 
   const handlePlaceOrder = async () => {
+    if (paymentMethod === "wallet" && !canPayWithWallet) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient wallet balance",
+        description: "Top up your wallet or pay with Paystack.",
+      });
+      return;
+    }
+
     const orderData = {
       userId,
       storeId,
@@ -90,28 +93,37 @@ const DeliveryInformation = ({
     );
 
     try {
-      await createOrder({ orderData, orderItems });
+      await createOrder({ orderData, orderItems, paymentMethod });
 
-      await updateCart({
-        cartId: typedCartData!.id,
-        userId: userId,
-        cartItems: [], // Empty array will clear all cart groups
-        totalPrice: 0,
-      });
+      if (typedCartData?.id) {
+        await updateCart({
+          cartId: typedCartData.id,
+          userId: userId,
+          cartItems: [],
+          totalPrice: 0,
+        });
+      }
 
       toast({
         title: "Success",
-        description: "Order created successfully!",
+        description:
+          paymentMethod === "wallet"
+            ? "Order paid with wallet."
+            : "Order created successfully!",
       });
 
       setIsOpen(false);
-
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Order creation failed:", error);
+      const message =
+        (error as { response?: { data?: { message?: string } }; message?: string })
+          ?.response?.data?.message ||
+        (error as Error)?.message ||
+        "Order failed";
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: message,
       });
     }
   };
@@ -246,6 +258,71 @@ const DeliveryInformation = ({
             <p className="font-medium">Payment Method</p>
           </span>
         </div>
+        <RadioGroup
+          value={paymentMethod}
+          onValueChange={(value) =>
+            setPaymentMethod(value as OrderPaymentMethod)
+          }
+          className="mb-2"
+        >
+          <div className="border-b border-gray-200 py-2">
+            <span className="flex flex-row items-center justify-between h-10">
+              <span className="flex flex-row items-center gap-3">
+                <Wallet size={17} className="text-ash/60" />
+                <div>
+                  <Label
+                    htmlFor="pay-wallet"
+                    className={cn(
+                      "font-normal text-base",
+                      canPayWithWallet ? "text-black" : "text-ash/40"
+                    )}
+                  >
+                    Pay with wallet
+                  </Label>
+                  <p className="text-xs text-ash/50">
+                    Balance ₦
+                    {formatNumberWithCommas(Number(walletBalance.toFixed(2)))}
+                    {!canPayWithWallet ? (
+                      <>
+                        {" · "}
+                        <Link
+                          to="/shop/wallet"
+                          className="text-scotch hover:underline"
+                        >
+                          Top up
+                        </Link>
+                      </>
+                    ) : null}
+                  </p>
+                </div>
+              </span>
+              <RadioGroupItem
+                value="wallet"
+                id="pay-wallet"
+                disabled={!canPayWithWallet}
+                className="border-black"
+              />
+            </span>
+          </div>
+          <div className="border-b border-gray-200 py-2">
+            <span className="flex flex-row items-center justify-between h-10">
+              <span className="flex flex-row items-center gap-3">
+                <Banknote size={17} className="text-ash/60" />
+                <Label
+                  htmlFor="pay-paystack"
+                  className="font-normal text-base text-black"
+                >
+                  Pay with Paystack
+                </Label>
+              </span>
+              <RadioGroupItem
+                value="paystack"
+                id="pay-paystack"
+                className="border-black"
+              />
+            </span>
+          </div>
+        </RadioGroup>
         <div className="mt-4 flex flex-col gap-4">
           <Button asChild onClick={handlePlaceOrder}>
             <span className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600 cursor-pointer">
@@ -256,8 +333,10 @@ const DeliveryInformation = ({
                     <FaSpinner className="animate-spin" />
                   </span>
                 </>
+              ) : paymentMethod === "wallet" ? (
+                <>Pay with wallet</>
               ) : (
-                <> Place Order </>
+                <>Place Order</>
               )}
             </span>
           </Button>

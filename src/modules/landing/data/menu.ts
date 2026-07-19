@@ -1,26 +1,8 @@
 export type MenuCategory =
-  | "All"
   | "African"
   | "Continental"
   | "Fast Food"
   | "Desserts";
-
-export interface MenuDish {
-  id: string;
-  name: string;
-  price: string;
-  category: Exclude<MenuCategory, "All">;
-  image: string;
-  alt: string;
-}
-
-export const MENU_FILTERS: MenuCategory[] = [
-  "All",
-  "African",
-  "Continental",
-  "Fast Food",
-  "Desserts",
-];
 
 /**
  * Best-effort bridge from landing marketing categories to the shop's
@@ -28,66 +10,82 @@ export const MENU_FILTERS: MenuCategory[] = [
  * Unmatched values are ignored by the shop page, so links degrade to an
  * unfiltered /shop rather than a broken state.
  */
-export const SHOP_CATEGORY_BY_LANDING: Record<
-  Exclude<MenuCategory, "All">,
-  string
-> = {
+export const SHOP_CATEGORY_BY_LANDING: Record<MenuCategory, string> = {
   African: "Meal",
   Continental: "Meal",
   "Fast Food": "Snack",
   Desserts: "Dessert",
 };
 
-export const MENU_DISHES: MenuDish[] = [
+/**
+ * Expandable category rails — shop dish types (see categories/data.ts).
+ * Structure inspired by Chowdeck verticals.
+ */
+export const ON_DECK = [
   {
-    id: "1",
-    name: "Jollof Rice Bowl",
-    price: "₦4,500",
-    category: "African",
-    image: "/images/landing/menu-jollof.jpg",
-    alt: "Plate of Nigerian jollof rice with sides on a dark table",
+    id: "meal",
+    label: "Meal",
+    description:
+      "Full plates and hearty mains from kitchens nearby — jollof to grill, ready when you are.",
+    icon: "/images/categories/dinner-plate.png",
+    bg: "#ffedd5",
+    ink: "#c2410c",
   },
   {
-    id: "2",
-    name: "Suya Plate",
-    price: "₦5,200",
-    category: "African",
-    image: "/images/landing/menu-suya.jpg",
-    alt: "Grilled meat skewers on a black plate, suya-style",
+    id: "snack",
+    label: "Snack",
+    description:
+      "Quick bites between meals — light, fast, and satisfying when hunger won't wait.",
+    icon: "/images/categories/snacks.png",
+    bg: "#fef9c3",
+    ink: "#a16207",
   },
   {
-    id: "3",
-    name: "Pasta al Pomodoro",
-    price: "₦6,800",
-    category: "Continental",
-    image: "/images/landing/menu-pasta.jpg",
-    alt: "Bowl of pasta with tomato sauce and basil",
+    id: "dessert",
+    label: "Dessert",
+    description:
+      "Sweet finishes when the craving won't wait — cakes, pastries, and cold treats.",
+    icon: "/images/categories/dessert.png",
+    bg: "#dcfce7",
+    ink: "#15803d",
   },
   {
-    id: "4",
-    name: "Vegetable Chow Mein",
-    price: "₦5,500",
-    category: "Continental",
-    image: "/images/landing/menu-noodles.jpg",
-    alt: "Stir-fried noodles with vegetables in a dark bowl",
+    id: "sides",
+    label: "Sides",
+    description:
+      "Fries and extras to round out the order — the supporting cast that steals the plate.",
+    icon: "/images/categories/fries.png",
+    bg: "#ecfccb",
+    ink: "#4d7c0f",
   },
   {
-    id: "5",
-    name: "Smash Burger",
-    price: "₦4,800",
-    category: "Fast Food",
-    image: "/images/landing/menu-burger.jpg",
-    alt: "Stacked smash burger with lettuce and bun",
+    id: "small-chops",
+    label: "Small Chops",
+    description:
+      "Party plates and finger food — samosas, spring rolls, and shareable bites.",
+    icon: "/images/categories/samosa.png",
+    bg: "#e0f2fe",
+    ink: "#0369a1",
   },
   {
-    id: "6",
-    name: "Chocolate Slice",
-    price: "₦3,200",
-    category: "Desserts",
-    image: "/images/landing/menu-dessert.jpg",
-    alt: "Slice of chocolate cake with glossy frosting",
+    id: "variety",
+    label: "Variety",
+    description:
+      "Mixed picks and crowd favorites when you want options — pizza, combos, and more.",
+    icon: "/images/categories/pizza-box.png",
+    bg: "#ede9fe",
+    ink: "#6d28d9",
   },
-];
+  {
+    id: "drink",
+    label: "Drink",
+    description:
+      "Cold drinks and pours to go with the plate — soft drinks, juices, and more.",
+    icon: "/images/categories/drink.png",
+    bg: "#ffe4e6",
+    ink: "#be123c",
+  },
+] as const;
 
 export const CUISINES = [
   {
@@ -194,7 +192,7 @@ export const FAQS = [
     id: "04",
     question: "How do I place an order?",
     answer:
-      "Pick a dish or cuisine from the menu, head to the shop, add what you want to your cart, and check out. You'll get an order number to follow along.",
+      "Pick a category from What's Cooking, head to the shop, add what you want to your cart, and check out. You'll get an order number to follow along.",
   },
   {
     id: "05",

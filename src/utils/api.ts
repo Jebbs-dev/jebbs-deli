@@ -1,21 +1,53 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import useAuthStore from "@/store/auth";
+
+type RefreshResult = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+type StoredUserInfo = {
+  accessToken?: string;
+  refreshToken?: string;
+  [key: string]: unknown;
+};
+
+const getUserInfo = (): StoredUserInfo | null => {
+  try {
+    const userInfoStr = localStorage.getItem("userInfo");
+    return userInfoStr ? JSON.parse(userInfoStr) : null;
+  } catch (error) {
+    console.error("Error parsing userInfo:", error);
+    return null;
+  }
+};
+
+const saveAccessToken = (accessToken: string) => {
+  const userInfo = getUserInfo();
+  if (!userInfo) return;
+
+  localStorage.setItem(
+    "userInfo",
+    JSON.stringify({ ...userInfo, accessToken })
+  );
+};
+
+const handleRefreshUnauthorized = () => {
+  useAuthStore.getState().logout();
+  window.location.href = "/auth";
+};
 
 // Helper function to check if token is about to expire
 const isTokenExpiringSoon = (token: string, thresholdMinutes = 30): boolean => {
   try {
-    const decoded: any = jwtDecode(token);
+    const decoded: { exp?: number } = jwtDecode(token);
     if (!decoded.exp) return false;
-    
-    // Calculate when the token will expire (in milliseconds)
+
     const expirationTime = decoded.exp * 1000;
-    const currentTime = Date.now();
-    const timeUntilExpiration = expirationTime - currentTime;
-    
-    // Convert threshold to milliseconds
+    const timeUntilExpiration = expirationTime - Date.now();
     const thresholdMs = thresholdMinutes * 60 * 1000;
-    
-    // Return true if token will expire within the threshold time
+
     return timeUntilExpiration <= thresholdMs;
   } catch (error) {
     console.error("Error decoding token:", error);
@@ -23,96 +55,68 @@ const isTokenExpiringSoon = (token: string, thresholdMinutes = 30): boolean => {
   }
 };
 
-// Function to refresh the token
-const refreshAuthToken = async () => {
-  try {
-    let userInfo: any = {};
-    if (localStorage.getItem("userInfo")) {
-      userInfo = JSON.parse(localStorage.getItem("userInfo")!);
-    }
-    
-    if (!userInfo?.refreshToken) {
-      throw new Error("No refresh token available");
-    }
+let refreshPromise: Promise<RefreshResult> | null = null;
 
-    const refreshResponse = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`,
-      { refreshToken: userInfo.refreshToken }
-    );
+const refreshAccessToken = async (): Promise<string> => {
+  const userInfo = getUserInfo();
 
-    const { accessToken, refreshToken } = refreshResponse.data;
-
-    // Update the tokens in localStorage
-    localStorage.setItem(
-      "userInfo",
-      JSON.stringify({ ...userInfo, accessToken, refreshToken })
-    );
-
-    return accessToken;
-  } catch (error) {
-    console.error("Token refresh failed:", error);
-    localStorage.removeItem("userInfo");
-    throw error;
+  if (!userInfo?.refreshToken) {
+    throw new Error("No refresh token available");
   }
+
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post<RefreshResult>(
+        `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+        { refreshToken: userInfo.refreshToken }
+      )
+      .then((response) => {
+        saveAccessToken(response.data.accessToken);
+        return response.data;
+      })
+      .catch((error) => {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          handleRefreshUnauthorized();
+        }
+        throw error;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  const { accessToken } = await refreshPromise;
+  return accessToken;
 };
 
 const api = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_BASE_URL}`,
-  timeout: 10000, // Set a reasonable timeout
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  withCredentials: true, // If your API requires authentication cookies
+  withCredentials: true,
 });
-
-// Flag to prevent multiple refresh attempts
-let isRefreshing = false;
-let failedQueue: any[] = [];
-
-// Function to process queued requests
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (token) {
-      prom.resolve(token);
-    } else {
-      prom.reject(error);
-    }
-  });
-  failedQueue = [];
-};
 
 api.interceptors.request.use(
   async (config) => {
-    let userInfo = null;
-    try {
-      const userInfoStr = localStorage.getItem("userInfo");
-      if (userInfoStr) {
-        userInfo = JSON.parse(userInfoStr);
-      }
-    } catch (error) {
-      console.error("Error parsing userInfo:", error);
-    }
+    const userInfo = getUserInfo();
 
     if (userInfo?.accessToken) {
-      // Check if token is about to expire and refresh it proactively
-      // For API requests, refresh if token expires within 30 minutes
-      if (isTokenExpiringSoon(userInfo.accessToken, 30) && !isRefreshing) {
+      if (isTokenExpiringSoon(userInfo.accessToken, 30)) {
         try {
-          isRefreshing = true;
-          const newToken = await refreshAuthToken();
+          const newToken = await refreshAccessToken();
           config.headers.Authorization = `Bearer ${newToken}`;
         } catch (error) {
           console.error("Proactive token refresh failed:", error);
-        } finally {
-          isRefreshing = false;
+          config.headers.Authorization = `Bearer ${userInfo.accessToken}`;
         }
       } else {
         config.headers.Authorization = `Bearer ${userInfo.accessToken}`;
       }
     }
 
-    // Dynamically set Content-Type based on the request data
     if (config.data instanceof FormData) {
       config.headers["Content-Type"] = "multipart/form-data";
     }
@@ -123,103 +127,51 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response, // Pass successful responses as they are
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // If another refresh request is already in progress, queue this request
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        // Use the refreshAuthToken function we created
-        const newAccessToken = await refreshAuthToken();
-        
-        // Process queued requests with the new token
-        processQueue(null, newAccessToken);
-
-        // Retry the failed request with the new token
+        const newAccessToken = await refreshAccessToken();
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
-        // Clear tokens and redirect to login
-        processQueue(refreshError, null);
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 
     return Promise.reject(error);
   }
-
-  // (error) => {
-  //   if (error.response) {
-  //     // Handle different HTTP status codes
-  //     if (error.response.status === 401) {
-  //       console.log("Unauthorized! Redirecting to login...");
-  //       // Logout user or redirect to login page
-  //     } else if (error.response.status === 403) {
-  //       console.log("Forbidden! You don't have access.");
-  //     } else if (error.response.status === 500) {
-  //       console.log("Server error! Please try again later.");
-  //     }
-  //   } else if (error.request) {
-  //     console.log("No response received from the server.");
-  //   } else {
-  //     console.log("Request setup error:", error.message);
-  //   }
-  //   return Promise.reject(error);
-  // }
 );
 
 export default api;
 
 /**
  * Sets up a periodic token refresh check to keep the session alive
- * Call this function when your application initializes (e.g., in _app.js/app.js)
  */
 export const setupSilentRefresh = () => {
-  // Check for token refresh need on startup
   const checkAndRefreshToken = async () => {
     try {
-      const userInfoStr = localStorage.getItem("userInfo");
-      if (!userInfoStr) return;
-      
-      const userInfo = JSON.parse(userInfoStr);
+      const userInfo = getUserInfo();
       if (!userInfo?.accessToken) return;
-      
-      // If token is going to expire in the next 2 hours, refresh it
-      if (isTokenExpiringSoon(userInfo.accessToken, 120) && !isRefreshing) {
-        console.log("Silent token refresh initiated");
-        await refreshAuthToken();
+
+      if (isTokenExpiringSoon(userInfo.accessToken, 120)) {
+        await refreshAccessToken();
       }
     } catch (error) {
       console.error("Silent token refresh failed:", error);
     }
   };
 
-  // Immediately check if we need to refresh - delay slightly to ensure the browser has fully loaded
-  setTimeout(() => {
-    checkAndRefreshToken();
-  }, 1000);
-  
-  // Set up periodic checking (every 1 hour)
+  const startupTimeout = setTimeout(checkAndRefreshToken, 1000);
   const refreshInterval = setInterval(checkAndRefreshToken, 60 * 60 * 1000);
-  
-  // Clean up interval when needed
-  return () => clearInterval(refreshInterval);
+
+  return () => {
+    clearTimeout(startupTimeout);
+    clearInterval(refreshInterval);
+  };
 };

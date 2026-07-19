@@ -1,334 +1,397 @@
 import { Image } from "@unpic/react";
-import { useState } from "react";
-import { useSearch } from "@tanstack/react-router";
-import { ShoppingCart } from "lucide-react";
-import { FaClock } from "react-icons/fa6";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import {
+  BadgeCheck,
+  Bike,
+  Clock,
+  Percent,
+  SlidersHorizontal,
+  Star,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { categories } from "@/modules/shop/components/categories/data";
-import ProductInformation from "@/modules/shop/components/product-information";
-import { useFetchProduct } from "@/modules/shop/queries/fetch-products";
-import useCartStore from "@/store/cart";
-import { Product } from "@/types/types";
+import {
+  useFetchStores,
+  type StoreListItem,
+} from "@/modules/shop/queries/fetch-stores";
+import {
+  isStoreOpenNow,
+  parsePrepMaxMinutes,
+} from "@/modules/shop/lib/store-hours";
+import { partitionStores } from "@/modules/shop/lib/partition-stores";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
-import { useToast } from "@/hooks/use-toast";
-import useAuthStore from "@/store/auth";
-import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
-import { useFetchCart } from "@/modules/shop/cart/queries/fetch-cart";
-import OrderHistory from "@/modules/checkout/components/order-history";
 import { useQueryParamaters } from "@/store/use-query-parameters";
-import { useFetchFilteredProduct } from "@/modules/shop/queries/fetch-filtered-products";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useOrderData } from "@/store/order";
 import PaymentLinkModal from "@/modules/checkout/components/payment-link-modal";
 import { useVerifyTransaction } from "@/modules/checkout/queries/verify-transaction";
+import { cn } from "@/lib/utils";
 
-const ProductSkeleton = () => {
+type ShopFilter = "all" | "open" | "fast" | "discounts" | string;
+
+function resolveCategoryFromParam(param?: string) {
+  if (!param) return null;
   return (
-    <div className="p-4 bg-white rounded-lg shadow-sm animate-pulse">
-      <div className="relative h-[100px] bg-gray-200 rounded-md"></div>
-      <div className="flex flex-col py-2 space-y-2">
-        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-        <div className="h-3 bg-gray-200 rounded w-full"></div>
-        <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-        <div className="h-6 bg-gray-200 rounded w-1/4 mt-2"></div>
-      </div>
-    </div>
+    categories.find((c) => c.name.toLowerCase() === param.toLowerCase())
+      ?.name ?? null
   );
-};
+}
+
+function storeMatchesCategory(store: StoreListItem, category: string) {
+  return (store.products ?? []).some(
+    (p) => p.category?.toLowerCase() === category.toLowerCase()
+  );
+}
+
+const StoreSkeleton = () => (
+  <div className="flex h-full flex-col">
+    <div className="h-[160px] animate-pulse rounded-xl bg-black/5" />
+    <div className="space-y-2 py-3">
+      <div className="h-4 w-3/4 animate-pulse rounded bg-black/5" />
+      <div className="h-3 w-1/2 animate-pulse rounded bg-black/5" />
+    </div>
+  </div>
+);
+
+function StoreCard({ store }: { store: StoreListItem }) {
+  const open = isStoreOpenNow(store.openingTime, store.closingTime);
+  const fee = Number(store.deliveryFee ?? 0);
+  const cover = store.billboard || store.logo;
+
+  return (
+    <Link
+      to="/shop/$storeId"
+      params={{ storeId: store.id }}
+      className="group block h-full cursor-pointer overflow-hidden rounded-xl bg-white transition-all"
+    >
+      <div className="flex h-full flex-col">
+        <div
+          title={store.name}
+          className="relative h-[160px] w-full overflow-hidden rounded-xl border border-black/5"
+        >
+          {cover ? (
+            <Image
+              src={cover}
+              alt={store.name}
+              width={480}
+              height={160}
+              className={cn(
+                "absolute inset-0 h-full w-full object-cover",
+                !open && "brightness-50"
+              )}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#f3f3f3]">
+              <span className="text-sm font-medium text-ash/30">
+                {store.name}
+              </span>
+            </div>
+          )}
+
+          {!open && (
+            <span className="absolute left-2 top-2 rounded bg-black/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+              Closed
+            </span>
+          )}
+
+          <span className="absolute bottom-2 right-2 rounded-md bg-white px-2 py-1 text-xs font-medium text-ash shadow-sm">
+            {fee > 0 ? `₦${formatNumberWithCommas(fee)}` : "Free delivery"}
+          </span>
+        </div>
+
+        <div className="flex flex-1 flex-col justify-center py-3">
+          <div className="mb-2 flex items-start justify-between gap-2">
+            <h3 className="flex items-center gap-1.5 text-base font-medium leading-none text-black">
+              <span className="line-clamp-1">{store.name}</span>
+              {store.isActive && (
+                <BadgeCheck
+                  className="size-[18px] shrink-0 fill-scotch text-white"
+                  aria-label="Verified"
+                />
+              )}
+            </h3>
+          </div>
+
+          <div className="flex flex-shrink-0 items-center text-sm leading-[18px] text-ash/70">
+            <span className="mr-1 flex items-center gap-1 border-r border-black/10 pr-2">
+              <Bike className="size-3 text-ash/60" aria-hidden />
+              {fee > 0 ? `₦${formatNumberWithCommas(fee)}` : "Free"}
+            </span>
+            {store.rating ? (
+              <span className="flex items-center gap-1 px-2">
+                <Star className="size-3 fill-ash text-ash" aria-hidden />
+                {store.rating}
+                {store.totalReviews ? (
+                  <span className="text-ash/45">({store.totalReviews})</span>
+                ) : null}
+              </span>
+            ) : (
+              <span className="px-2 text-ash/45">New</span>
+            )}
+            {store.preparationTime && (
+              <span className="border-l border-black/10 px-2">
+                {store.preparationTime}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 export function ShopPage() {
-  const { toast } = useToast();
-  const { isLoggedIn, user } = useAuthStore();
+  const navigate = useNavigate({ from: "/shop/" });
   const { querykey } = useQueryParamaters();
   const { category: categoryParam } = useSearch({ from: "/shop/" });
+  const debouncedQuery = useDebounce(querykey, 400);
 
-  const debouncedQuery = useDebounce(querykey, 1000);
-
-  const { data: products, isLoading } = useFetchFilteredProduct({
-    search: debouncedQuery,
-    isFeatured: true,
-    limit: 16,
+  const { data, isLoading } = useFetchStores({
+    search: debouncedQuery || undefined,
+    limit: 50,
   });
-  const { mutateAsync: updateCart, isPending } = useUpdateCart();
-  const { data: cartData } = useFetchCart(user?.id ? String(user.id) : "");
 
   const { paymentPayload } = useOrderData();
+  useVerifyTransaction(paymentPayload?.payment?.reference);
 
-  const { data: verifiedTransaction, isLoading: isTransactionVerifying } =
-    useVerifyTransaction(paymentPayload?.payment?.reference);
+  const [activeFilter, setActiveFilter] = useState<ShopFilter>(() => {
+    const fromParam = resolveCategoryFromParam(categoryParam);
+    return fromParam ?? "all";
+  });
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectProduct, setSelectProduct] = useState<Product | null>(null);
+  useEffect(() => {
+    const fromParam = resolveCategoryFromParam(categoryParam);
+    setActiveFilter(fromParam ?? "all");
+  }, [categoryParam]);
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    () =>
-      categories.find(
-        (c) => c.name.toLowerCase() === categoryParam?.toLowerCase()
-      )?.name ?? null
-  );
-  const { addItem } = useCartStore();
-
-  // Filter products based on selected category
-  const filteredProducts = selectedCategory
-    ? products?.products?.filter(
-        (product: any) =>
-          product.category?.toLowerCase() === selectedCategory.toLowerCase()
-      )
-    : products?.products;
-
-  // Handle category button click
-  const handleCategoryClick = (categoryName: string) => {
-    // If the same category is clicked again, clear the filter
-    if (selectedCategory === categoryName) {
-      setSelectedCategory(null);
-    } else {
-      setSelectedCategory(categoryName);
-    }
+  const syncFilter = (filter: ShopFilter) => {
+    setActiveFilter(filter);
+    const isCategory = categories.some((c) => c.name === filter);
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        category: isCategory ? filter : undefined,
+      }),
+      replace: true,
+    });
   };
-  // Handle adding product to cart
-  const handleAddToCart = async (product: Product) => {
-    if (isLoggedIn && user?.id && cartData) {
-      try {
-        // Get existing cart items
-        const existingCartItems = cartData.cartGroups
-          ? cartData.cartGroups.flatMap((group: any) =>
-              group.cartItems.map((item: any) => ({
-                ...item.product,
-                quantity: item.quantity,
-                store: group.store,
-                storeId: group.storeId,
-              }))
-            )
-          : [];
 
-        // Check if product already exists in cart
-        const existingItemIndex = existingCartItems.findIndex(
-          (item: any) => item.id === product.id
-        );
-
-        let updatedCartItems;
-
-        if (existingItemIndex !== -1) {
-          // Increase quantity of existing item
-          updatedCartItems = [...existingCartItems];
-          updatedCartItems[existingItemIndex] = {
-            ...updatedCartItems[existingItemIndex],
-            quantity: updatedCartItems[existingItemIndex].quantity + 1,
-          };
-        } else {
-          // Add new item with quantity 1
-          updatedCartItems = [
-            ...existingCartItems,
-            { ...product, quantity: 1, storeId: product.store?.id },
-          ];
-        }
-
-        // Calculate new total price
-        const newTotalPrice = updatedCartItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
-
-        // Update cart in backend
-        await updateCart({
-          cartId: cartData.id,
-          userId: user.id,
-          cartItems: updatedCartItems,
-          totalPrice: newTotalPrice,
-        });
-
-        toast({
-          description: `${product.name} added to cart!`,
-        });
-      } catch (error) {
-        console.error("Failed to add to cart:", error);
-        toast({
-          description: "Failed to add item to cart. Please try again.",
-          variant: "destructive",
-        });
+  const stores = useMemo(() => {
+    const list = data?.stores ?? [];
+    return list.filter((store) => {
+      if (!store.isActive) return false;
+      if (activeFilter === "all" || activeFilter === "discounts") return true;
+      if (activeFilter === "open") {
+        return isStoreOpenNow(store.openingTime, store.closingTime);
       }
-    } else {
-      // Use local cart for non-authenticated users
-      addItem(product);
-      toast({
-        description: `${product.name} added to cart!`,
-      });
-    }
+      if (activeFilter === "fast") {
+        const max = parsePrepMaxMinutes(store.preparationTime);
+        return max != null && max <= 30;
+      }
+      return storeMatchesCategory(store, activeFilter);
+    });
+  }, [data?.stores, activeFilter]);
+
+  const sections = useMemo(() => partitionStores(stores), [stores]);
+  const allVendorsRef = useRef<HTMLElement>(null);
+
+  const scrollToAllVendors = () => {
+    syncFilter("all");
+    requestAnimationFrame(() => {
+      allVendorsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
-  console.log(verifiedTransaction);
-  // Create an array of 8 items for skeleton loading
-  const skeletonArray = Array(8).fill(null);
-
-  const selectedProduct = products?.products?.find(
-    (product: Product) => product.id === selectProduct?.id
-  );
+  const filterChips: {
+    id: ShopFilter;
+    label: string;
+    icon?: ReactNode;
+  }[] = [
+    {
+      id: "discounts",
+      label: "Discounts",
+      icon: <Percent className="size-4" aria-hidden />,
+    },
+    {
+      id: "open",
+      label: "Open now",
+      icon: <Clock className="size-4" aria-hidden />,
+    },
+    {
+      id: "fast",
+      label: "Under 30 mins",
+      icon: <Bike className="size-4" aria-hidden />,
+    },
+    ...categories.map((c) => ({
+      id: c.name as ShopFilter,
+      label: c.name,
+    })),
+  ];
 
   return (
     <>
       <PaymentLinkModal />
-      <ProductInformation
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
-        product={selectedProduct}
-      />
-      <div className="pt-[81px] h-full text-sm">
-        <div className="md:container mx-auto px-10 2xl:px-0">
-          <section className="flex flex-col mb-4 md:mb-14">
-            <h3 className="mb-6 text-xl md:text-2xl font-medium">
-              Explore Categories
-              {selectedCategory && (
-                <span className="ml-2 text-sm font-normal text-gray-500">
-                  (Showing {selectedCategory})
-                </span>
-              )}
-            </h3>
+      <div className="mx-auto w-full max-w-[1280px] px-4 pb-10 md:px-8">
+        {/* Filter rail — All Filters + outline chips */}
+        <section className="flex items-center justify-start gap-4 pt-6">
+          <button
+            type="button"
+            onClick={() => syncFilter("all")}
+            className={cn(
+              "relative flex shrink-0 items-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+              activeFilter === "all"
+                ? "border-scotch bg-scotch/5 text-scotch"
+                : "border-black/10 bg-white text-ash hover:border-black/20"
+            )}
+          >
+            <SlidersHorizontal className="mr-1.5 size-4" aria-hidden />
+            All Filters
+          </button>
 
-            <div className="overflow-x-auto hide-scroll">
-              <div className="flex min-w-max">
-                {categories.map((category) => (
-                  <div
-                    className={`w-[116px] h-[116px] rounded-[10px] flex flex-col items-center justify-center cursor-pointer mr-8 last:mr-0 text-black ${
-                      selectedCategory === category.name ? "border-2" : ""
-                    }`}
-                    key={category.id}
-                    style={{
-                      backgroundColor: category.color,
-                      borderColor:
-                        selectedCategory === category.name
-                          ? category.borderColor
-                          : "transparent",
-                    }}
-                    onClick={() => handleCategoryClick(category.name)}
-                  >
-                    <span>
-                      <Image
-                        src={category.icon}
-                        alt={category.name}
-                        width={10}
-                        height={10}
-                        className="w-10 h-10"
-                      />
-                    </span>
-                    <span className="text-[14px] font-normal leading-[18px] text-center mt-4 tracking-normal">
-                      {category.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
+          <div
+            className="no-scrollbar relative flex items-center gap-3 overflow-x-auto whitespace-nowrap"
+            role="listbox"
+            aria-label="Kitchen filters"
+          >
+            {filterChips.map((chip) => {
+              const selected = activeFilter === chip.id;
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() =>
+                    syncFilter(selected && chip.id !== "all" ? "all" : chip.id)
+                  }
+                  className={cn(
+                    "inline-flex shrink-0 items-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                    selected
+                      ? "border-scotch bg-scotch/5 text-scotch"
+                      : "border-black/10 bg-white text-ash hover:border-black/20"
+                  )}
+                >
+                  {chip.icon ? (
+                    <span className="mr-1.5">{chip.icon}</span>
+                  ) : null}
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {isLoading ? (
+          <section className="mt-8" aria-busy>
+            <h2 className="mb-4 text-lg font-semibold text-black md:text-xl">
+              Featured
+            </h2>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <StoreSkeleton key={i} />
+              ))}
             </div>
           </section>
-
-          <section>
-            {isLoading ? (
-              // Skeleton loading state
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 animate-pulse">
-                {skeletonArray.map((_, index) => (
-                  <ProductSkeleton key={index} />
-                ))}
-              </div>
-            ) : filteredProducts && filteredProducts.length > 0 ? (
-              // Actual products
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 hover:gap-5">
-                {filteredProducts?.map((product: any) => (
-                  <div
-                    className="flex flex-col h-full hover:shadow-lg p-2 hover:rounded-lg"
-                    key={product.id}
-                  >
-                    <div className="relative h-[150px] bg-gray-300 rounded-xl">
-                      <span
-                        className="absolute top-2 right-2 bg-gray-50 bg-opacity-90 flex justify-center items-center rounded-sm cursor-pointer hover:bg-opacity-80 transition-all p-1"
-                        onClick={() => handleAddToCart(product)}
-                      >
-                        <ShoppingCart
-                          className="p-1 z-10"
-                          size={24}
-                          color="#fbbf24"
-                        />
-                      </span>
-                      {product.image ? (
-                        <Image
-                          src={product.image}
-                          alt="Product Image"
-                          width={100}
-                          height={100}
-                          className="w-full h-full object-cover rounded-xl"
-                        />
-                      ) : (
-                        <Image
-                          src="/images/image-placeholder.png"
-                          alt="Image placeholder"
-                          width={40}
-                          height={40}
-                          className="relative mx-auto top-[25%] opacity-40"
-                        />
-                      )}
-                    </div>
-                    <div className="flex flex-col flex-grow py-2">
-                      <h4
-                        className="font-semibold cursor-pointer hover:underline text-orange-900"
-                        onClick={() => {
-                          setIsOpen(true);
-                          setSelectProduct(product);
-                        }}
-                      >
-                        {product.name} - {product.store?.name}
-                      </h4>
-                      <p className="text-stone-500 flex flex-row items-center gap-2 ">
-                        <span>
-                          <FaClock />
-                        </span>
-                        <span>{product.store?.preparationTime}</span>
-                        {/* {product.description || "No description available"} */}
-                      </p>
-                      <div className="mt-2 flex justify-between items-center">
-                        <span className="font-medium text-amber-500">
-                          ₦
-                          {formatNumberWithCommas(
-                            Number(product.price.toFixed(2))
-                          )}
-                        </span>
-                        <button
-                          className="px-3 py-1 bg-amber-100 text-amber-800 rounded-md text-sm hover:bg-amber-200 transition-colors cursor-pointer"
-                          onClick={() => handleAddToCart(product)}
-                          disabled={isPending}
-                        >
-                          {"Add to Cart"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              // No products found
-              <div className="text-center py-10">
-                <div className="mx-auto w-[300px] h-[300px] flex items-center justify-center">
-                  <div className="text-gray-400">
-                    {selectedCategory
-                      ? `No products found in the ${selectedCategory} category`
-                      : !isLoading && (
-                          <div className="text-center py-10 ">
-                            <Image
-                              src="/svgs/Search.svg"
-                              alt="Not Found"
-                              width={500}
-                              height={500}
-                              className="mx-auto stroke-orange-400 w-[300px] h-[300px]"
-                            />
-                            <span className="-top-10 relative text-gray-400">
-                              No item found!
-                            </span>
-                          </div>
-                        )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-        </div>
+        ) : stores.length === 0 ? (
+          <div className="flex flex-col items-center py-16 text-center">
+            <p className="text-lg font-semibold text-ash">No kitchens match</p>
+            <p className="mt-1 max-w-[36ch] text-sm text-ash/60">
+              Try another filter or clear search.
+            </p>
+            <button
+              type="button"
+              className="mt-6 text-sm font-medium text-scotch hover:underline"
+              onClick={() => syncFilter("all")}
+            >
+              Show all kitchens
+            </button>
+          </div>
+        ) : (
+          <>
+            <StoreSection
+              id="featured-kitchens"
+              title="Featured"
+              stores={sections.featured}
+              onViewAll={scrollToAllVendors}
+            />
+            <StoreSection
+              id="handpicked-kitchens"
+              title="Handpicked for you"
+              stores={sections.handpicked}
+              onViewAll={scrollToAllVendors}
+            />
+            <StoreSection
+              id="essentials-kitchens"
+              title="Shop Essentials"
+              stores={sections.essentials}
+              onViewAll={scrollToAllVendors}
+            />
+            <StoreSection
+              id="all-vendors"
+              title="All vendors"
+              stores={sections.allVendors}
+              sectionRef={allVendorsRef}
+              showViewAll={false}
+            />
+          </>
+        )}
       </div>
     </>
+  );
+}
+
+function StoreSection({
+  id,
+  title,
+  stores,
+  onViewAll,
+  sectionRef,
+  showViewAll = true,
+}: {
+  id: string;
+  title: string;
+  stores: StoreListItem[];
+  onViewAll?: () => void;
+  sectionRef?: RefObject<HTMLElement | null>;
+  showViewAll?: boolean;
+}) {
+  if (stores.length === 0) return null;
+
+  return (
+    <section
+      ref={sectionRef}
+      className="mt-8 scroll-mt-28"
+      aria-labelledby={id}
+    >
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <h2 id={id} className="text-lg font-semibold text-black md:text-xl">
+          {title}
+        </h2>
+        {showViewAll && onViewAll ? (
+          <button
+            type="button"
+            className="text-sm font-medium text-scotch hover:underline"
+            onClick={onViewAll}
+          >
+            View all
+          </button>
+        ) : null}
+      </div>
+      <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+        {stores.map((store) => (
+          <li key={store.id} className="h-full">
+            <StoreCard store={store} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
