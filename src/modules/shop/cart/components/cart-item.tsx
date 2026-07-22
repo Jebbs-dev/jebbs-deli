@@ -3,25 +3,7 @@ import { Product } from "@/types/types";
 import { Image } from "@unpic/react";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
-import { useUpdateCart } from "../mutations/update-cart";
-import { useFetchCart } from "../queries/fetch-cart";
-
-interface CartItem {
-  id: string;
-  quantity: number;
-  product: Product;
-}
-
-interface CartGroup {
-  id: string;
-  storeId: string;
-  cartItems: CartItem[];
-}
-
-interface CartData {
-  id: string;
-  cartGroups: CartGroup[];
-}
+import { useUpsertCartItem } from "../mutations/upsert-cart-item";
 
 interface CartItemComponentProps {
   items: CartItemProps & {
@@ -36,102 +18,36 @@ interface CartItemComponentProps {
 const CartItem = ({ items, tone = "dark" }: CartItemComponentProps) => {
   const light = tone === "light";
   const totalPrice = items.price * items.quantity;
-  const { isLoggedIn, user } = useAuthStore();
-  const { mutateAsync: updateCart } = useUpdateCart();
-  const { data: cartData } = useFetchCart(user?.id ? String(user.id) : "");
+  const { isLoggedIn } = useAuthStore();
+  const { mutate: upsertItem } = useUpsertCartItem();
 
-  const handleAdd = async () => {
-    if (isLoggedIn && user && items.cartId && cartData) {
-      try {
-        const allCartItems = (cartData as CartData).cartGroups.flatMap(
-          (group: CartGroup) =>
-            group.cartItems.map((item: CartItem) => {
-              const isTargetItem = item.product.id === items.id;
-              return {
-                id: item.product.id,
-                quantity: isTargetItem ? item.quantity + 1 : item.quantity,
-                storeId: group.storeId,
-                productId: item.product.id,
-              };
-            })
-        );
+  const storeId = items.storeId || items.store?.id;
+  const canSync = Boolean(isLoggedIn && storeId);
 
-        const newTotalPrice = allCartItems.reduce(
-          (sum: number, item: { id: string; quantity: number }) => {
-            const product = (cartData as CartData).cartGroups
-              .flatMap((g: CartGroup) => g.cartItems)
-              .find((ci: CartItem) => ci.product.id === item.id)?.product;
-
-            return sum + (product?.price || 0) * item.quantity;
-          },
-          0
-        );
-
-        await updateCart({
-          cartId: items.cartId,
-          userId: user.id,
-          cartItems: allCartItems,
-          totalPrice: newTotalPrice,
-        });
-      } catch (error) {
-        console.error("Failed to update cart:", error);
-      }
-    } else {
-      items.onAdd();
+  const handleAdd = () => {
+    if (canSync && storeId) {
+      upsertItem({
+        productId: items.id,
+        storeId,
+        delta: 1,
+        product: items as unknown as Product,
+      });
+      return;
     }
+    items.onAdd();
   };
 
-  const handleRemove = async () => {
-    if (isLoggedIn && user && items.cartId && cartData) {
-      try {
-        const allCartItems = (cartData as CartData).cartGroups
-          .map((group: CartGroup) => {
-            const processedItems = group.cartItems
-              .filter((item: CartItem) => {
-                const isTargetItem = item.product.id === items.id;
-                return !isTargetItem || (isTargetItem && item.quantity > 1);
-              })
-              .map((item: CartItem) => {
-                const isTargetItem = item.product.id === items.id;
-                return {
-                  id: item.product.id,
-                  quantity: isTargetItem ? item.quantity - 1 : item.quantity,
-                  storeId: group.storeId,
-                  productId: item.product.id,
-                };
-              });
-
-            return {
-              storeId: group.storeId,
-              items: processedItems,
-            };
-          })
-          .filter((group) => group.items.length > 0)
-          .flatMap((group) => group.items);
-
-        const newTotalPrice = allCartItems.reduce(
-          (sum: number, item: { id: string; quantity: number }) => {
-            const product = (cartData as CartData).cartGroups
-              .flatMap((g: CartGroup) => g.cartItems)
-              .find((ci: CartItem) => ci.product.id === item.id)?.product;
-
-            return sum + (product?.price || 0) * item.quantity;
-          },
-          0
-        );
-
-        await updateCart({
-          cartId: items.cartId,
-          userId: user.id,
-          cartItems: allCartItems,
-          totalPrice: newTotalPrice,
-        });
-      } catch (error) {
-        console.error("Failed to update cart:", error);
-      }
-    } else {
-      items.onRemove();
+  const handleRemove = () => {
+    if (canSync && storeId) {
+      upsertItem({
+        productId: items.id,
+        storeId,
+        delta: -1,
+        product: items as unknown as Product,
+      });
+      return;
     }
+    items.onRemove();
   };
 
   return (

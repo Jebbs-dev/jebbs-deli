@@ -59,6 +59,7 @@ const CartSheet = () => {
     initializeCartData,
     toggleCartView,
     setToggleCartView,
+    setToggleCheckoutView,
   } = useCartViewStore();
 
   useEffect(() => {
@@ -123,6 +124,7 @@ const CartSheet = () => {
           ) : (
             <CartPage
               goToCheckout={() => {
+                setToggleCheckoutView("order");
                 setToggleCartView("checkout");
               }}
             />

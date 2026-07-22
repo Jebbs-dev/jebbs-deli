@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { ArrowUpRight, ChevronDown } from "@/components/icons";
 import { motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { FAQS } from "@/modules/landing/data/menu";

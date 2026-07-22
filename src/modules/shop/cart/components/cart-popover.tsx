@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShoppingBag } from "@/components/icons";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export function CartPopover({ cartCount }: CartPopoverProps) {
     initializeCartData,
     setIsOpen,
     setToggleCartView,
+    setToggleCheckoutView,
   } = useCartViewStore();
 
   useEffect(() => {
@@ -53,9 +54,8 @@ export function CartPopover({ cartCount }: CartPopoverProps) {
   useEffect(() => {
     if (!open) {
       setView("list");
-      setOpenStoreId(null);
     }
-  }, [open, setOpenStoreId]);
+  }, [open]);
 
   const deliveryAddress =
     userInformation?.address || "Set your delivery address";
@@ -68,9 +68,15 @@ export function CartPopover({ cartCount }: CartPopoverProps) {
   };
 
   const goToCheckout = () => {
-    setOpen(false);
+    if (openStoreId) {
+      setOpenStoreId(openStoreId);
+    } else if (storeTotals[0]?.storeId) {
+      setOpenStoreId(storeTotals[0].storeId);
+    }
     setToggleCartView("checkout");
+    setToggleCheckoutView("order");
     setIsOpen(true);
+    setOpen(false);
   };
 
   return (

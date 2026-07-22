@@ -1,28 +1,85 @@
 "use client";
 
-import { useState, useEffect, SetStateAction, Dispatch } from "react";
-import { Input } from "@/components/ui/input";
+import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import {
   Command,
   CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { useLoadScript } from "@react-google-maps/api";
-import { Prediction } from "@/modules/shop/components/header";
-import { useUpdateUser } from "@/modules/user/mutations/update-user";
-import useAuthStore from "@/store/auth";
-import { useAddAddress } from "@/modules/user/mutations/add-address";
+import { useGoogleMaps } from "@/hooks/use-google-maps";
+import { useDebounce } from "@/hooks/use-debounce";
 
-const libraries = ["places"];
+/** Normalized place suggestion used by header + address dialogs. */
+export type PlacePrediction = {
+  description: string;
+  place_id: string;
+  types: string[];
+};
 
 interface PlacesAutocompleteProps {
   input: string;
   setInput: Dispatch<SetStateAction<string>>;
-  predictions: google.maps.places.AutocompletePrediction[];
-  setPredictions: Dispatch<
-    SetStateAction<google.maps.places.AutocompletePrediction[]>
-  >;
+  predictions: PlacePrediction[];
+  setPredictions: Dispatch<SetStateAction<PlacePrediction[]>>;
+  /** Called when the user picks a suggestion from the list (does not save yet). */
+  onLocationPicked?: (prediction: PlacePrediction) => void;
+}
+
+type PlacesLibrary = {
+  AutocompleteSuggestion?: {
+    fetchAutocompleteSuggestions: (request: {
+      input: string;
+      includedRegionCodes?: string[];
+    }) => Promise<{
+      suggestions: Array<{
+        placePrediction?: {
+          text?: { text?: string } | string;
+          placeId?: string;
+          types?: string[];
+        } | null;
+      }>;
+    }>;
+  };
+};
+
+async function fetchPlacePredictions(
+  input: string
+): Promise<PlacePrediction[]> {
+  const places = (await google.maps.importLibrary(
+    "places"
+  )) as PlacesLibrary;
+
+  const AutocompleteSuggestion = places.AutocompleteSuggestion;
+  if (!AutocompleteSuggestion?.fetchAutocompleteSuggestions) {
+    throw new Error("Places AutocompleteSuggestion API is unavailable");
+  }
+
+  const { suggestions } =
+    await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+      input,
+      includedRegionCodes: ["ng"],
+    });
+
+  return suggestions
+    .map((suggestion) => {
+      const prediction = suggestion.placePrediction;
+      if (!prediction?.placeId) return null;
+
+      const text =
+        typeof prediction.text === "string"
+          ? prediction.text
+          : prediction.text?.text ?? "";
+
+      if (!text) return null;
+
+      return {
+        description: text,
+        place_id: prediction.placeId,
+        types: prediction.types ?? [],
+      } satisfies PlacePrediction;
+    })
+    .filter((item): item is PlacePrediction => item !== null);
 }
 
 export default function CustomPlacesAutocomplete({
@@ -30,83 +87,80 @@ export default function CustomPlacesAutocomplete({
   setInput,
   predictions,
   setPredictions,
+  onLocationPicked,
 }: PlacesAutocompleteProps) {
-  // const [input, setInput] = useState("");
-  // const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const { user } = useAuthStore();
-  const { mutateAsync: updateUser } = useUpdateUser(String(user?.id));
-  const { mutateAsync: addAddress } = useAddAddress();
-
-  const [autocompleteService, setAutocompleteService] =
-    useState<google.maps.places.AutocompleteService | null>(null);
-
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-    libraries: libraries as any,
-  });
+  const { isLoaded, loadError } = useGoogleMaps();
+  const debouncedInput = useDebounce(input, 300);
+  const skipNextFetchRef = useRef(false);
 
   useEffect(() => {
-    if (isLoaded && !autocompleteService) {
-      setAutocompleteService(
-        new window.google.maps.places.AutocompleteService()
-      );
-    }
-  }, [isLoaded]);
-
-  useEffect(() => {
-    if (!autocompleteService || input === "") {
+    if (!isLoaded || !debouncedInput.trim()) {
       setPredictions([]);
       return;
     }
 
-    autocompleteService.getPlacePredictions(
-      { input, componentRestrictions: { country: "ng" } },
-      (results) => {
-        if (results) {
-          setPredictions(results);
-        }
-      }
-    );
-  }, [input, autocompleteService]);
-
-  const handleSelect = async (prediction: Prediction) => {
-    setInput(prediction.description);
-    setPredictions([]);
-
-    try {
-      await updateUser({
-        address: prediction.description,
-      });
-
-      await addAddress({
-        description: prediction.description,
-        place_id: prediction.place_id,
-        reference: prediction?.place_id,
-        types: prediction.types,
-      });
-    } catch (error) {
-      console.log(error);
+    if (skipNextFetchRef.current) {
+      skipNextFetchRef.current = false;
+      setPredictions([]);
+      return;
     }
 
-    // Optional: use PlacesService to get full details like lat/lng
-    console.log("Selected Prediction:", prediction);
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const results = await fetchPlacePredictions(debouncedInput.trim());
+        if (!cancelled) setPredictions(results);
+      } catch (error) {
+        console.error("Places autocomplete failed:", error);
+        if (!cancelled) setPredictions([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedInput, isLoaded, setPredictions]);
+
+  const handleSelect = (prediction: PlacePrediction) => {
+    skipNextFetchRef.current = true;
+    setPredictions([]);
+    setInput(prediction.description);
+    onLocationPicked?.(prediction);
   };
 
   return (
     <div className="relative w-full max-w-md">
-      <Command className="bg-gray-200 rounded-md border shadow-sm">
+      <Command
+        shouldFilter={false}
+        className="overflow-visible rounded-md border border-black/10 bg-white shadow-sm"
+      >
         <CommandInput
-          placeholder="Search location..."
+          placeholder={
+            loadError
+              ? "Unable to load location search"
+              : isLoaded
+                ? "Search location..."
+                : "Loading location search..."
+          }
           value={input}
           onValueChange={setInput}
+          disabled={!isLoaded || Boolean(loadError)}
+          className="pl-8 text-ash"
         />
         {predictions.length > 0 && (
-          <CommandList className="absolute z-10 top-full left-0 right-0 bg-white border shadow-md max-h-60 overflow-y-auto">
+          <CommandList className="absolute left-0 right-0 top-full z-100 max-h-60 overflow-y-auto border border-black/10 bg-white shadow-md">
             {predictions.map((prediction) => (
               <CommandItem
                 key={prediction.place_id}
                 value={prediction.description}
+                onMouseDown={(event) => {
+                  // Prevent input blur + cmdk value churn that forces a second click
+                  event.preventDefault();
+                  handleSelect(prediction);
+                }}
                 onSelect={() => handleSelect(prediction)}
+                className="cursor-pointer text-ash"
               >
                 {prediction.description}
               </CommandItem>
@@ -114,6 +168,12 @@ export default function CustomPlacesAutocomplete({
           </CommandList>
         )}
       </Command>
+      {loadError ? (
+        <p className="mt-2 text-xs text-red-600">
+          Location search failed to load. Check your Google Maps API key and
+          enable Places API (New).
+        </p>
+      ) : null}
     </div>
   );
 }

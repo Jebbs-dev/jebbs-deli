@@ -84,12 +84,11 @@ export const useCartViewStore = create<CartViewState>((set, get) => ({
 
     const cartItemsToUse = isLoggedIn ? fetchedCartItems : localItems;
 
-    console.log(localItems);
-
     const groupedByVendorStore = cartItemsToUse.reduce<
       Record<string, CartItemProps[]>
     >((acc, product) => {
-      const storeId = product.store?.id || "unknown";
+      const storeId =
+        product.storeId || product.store?.id || "unknown";
       if (!acc[storeId]) acc[storeId] = [];
       acc[storeId].push(product);
       return acc;

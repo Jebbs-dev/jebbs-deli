@@ -15,7 +15,7 @@ import {
   Percent,
   SlidersHorizontal,
   Star,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { categories } from "@/modules/shop/components/categories/data";
 import {

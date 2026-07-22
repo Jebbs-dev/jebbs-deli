@@ -1,6 +1,5 @@
 import { Outlet } from "@tanstack/react-router";
 
-import Footer from "@/modules/shop/components/footer";
 import Header from "@/modules/shop/components/header";
 
 export function ShopLayout() {
@@ -10,7 +9,6 @@ export function ShopLayout() {
       <main className="flex-1 bg-white pt-[7.25rem] md:pt-[5.75rem]">
         <Outlet />
       </main>
-      <Footer />
     </div>
   );
 }

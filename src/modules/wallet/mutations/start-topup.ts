@@ -8,9 +8,11 @@ export const useStartWalletTopup = () => {
 
   return useMutation({
     mutationFn: async (data: { amount: number; callback_url?: string }) => {
+      // Paystack init + Railway DB often exceeds the default 10s axios timeout.
       const response = await api.post<WalletTopupResponse>(
         "/wallet/topup",
-        data
+        data,
+        { timeout: 60_000 }
       );
       return response.data;
     },

@@ -138,7 +138,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
               ? form.handleSubmit(login)
               : form.handleSubmit(register)
           }
-          className="space-y-4 text-left"
+          className="space-y-4 text-left text-ash"
         >
           {variant === "register" && (
             <FormField
@@ -148,7 +148,11 @@ const AuthForm = ({ variant }: AuthFormProps) => {
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Jack Smith" {...field} className="" />
+                    <Input
+                      placeholder="Jack Smith"
+                      {...field}
+                      className="border-black/10 bg-white text-ash placeholder:text-ash/50"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -165,7 +169,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
                   <Input
                     placeholder="user@example.com"
                     {...field}
-                    className=""
+                    className="border-black/10 bg-white text-ash placeholder:text-ash/50"
                   />
                 </FormControl>
                 <FormMessage />
@@ -183,7 +187,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
                     placeholder="password"
                     type="password"
                     {...field}
-                    className=""
+                    className="border-black/10 bg-white text-ash placeholder:text-ash/50"
                   />
                 </FormControl>
                 <FormMessage />

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check } from "@/components/icons";
 
 const ADMIN_ONBOARDING_URL = "https://jebbs-deli-admin.vercel.app/auth";
 

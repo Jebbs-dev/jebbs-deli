@@ -4,7 +4,7 @@ import CartItem from "./cart-item";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "@/components/icons";
 import { useUpdateCart } from "../mutations/update-cart";
 import { useAuthFormModal } from "@/store/auth-form-modal";
 import AuthModal from "@/modules/auth/components/auth-modal";
@@ -24,6 +24,7 @@ const CartPage = ({ goToCheckout }: CartProps) => {
     storeTotals,
     typedCartData,
     cartItemsToUse,
+    cartTotal,
     openStoreId,
     setOpenStoreId,
     handleClearVendorItems,
@@ -31,6 +32,11 @@ const CartPage = ({ goToCheckout }: CartProps) => {
 
   const { onAuthFormOpen } = useAuthFormModal();
   const { isLoggedIn, user } = useAuthStore();
+
+  const itemCount = storeTotals.reduce(
+    (sum, store) => sum + store.totalQuantity,
+    0
+  );
 
   return (
     <>
@@ -123,12 +129,8 @@ const CartPage = ({ goToCheckout }: CartProps) => {
                           setIsOpen(false);
                           onAuthFormOpen();
                         } else {
+                          setOpenStoreId(store.storeId);
                           goToCheckout();
-                          setOpenStoreId(
-                            openStoreId === store.storeId
-                              ? null
-                              : store.storeId
-                          );
                         }
                       }}
                     >
@@ -159,6 +161,17 @@ const CartPage = ({ goToCheckout }: CartProps) => {
 
         {cartItemsToUse.length > 0 && (
           <div className="mt-4 border-t border-black/10 px-1 pb-4 pt-4">
+            <div className="mb-1 flex justify-between text-base font-medium text-ash">
+              <p>
+                Subtotal ({itemCount} {itemCount === 1 ? "item" : "items"})
+              </p>
+              <p className="font-mono">
+                ₦{formatNumberWithCommas(Number(cartTotal.toFixed(2)))}
+              </p>
+            </div>
+            <p className="mb-4 text-sm text-ash/55">
+              Delivery and fees calculated at checkout.
+            </p>
             <Button
               type="button"
               variant="outline"

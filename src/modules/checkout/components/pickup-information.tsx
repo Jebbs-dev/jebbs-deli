@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCartViewStore } from "@/store/cart-data";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
-import { Banknote, Bike, CircleAlert, Wallet } from "lucide-react";
+import { Banknote, CircleAlert, MapPin, Wallet } from "@/components/icons";
 import { useState } from "react";
 import {
   useCreateOrder,
@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFetchWallet } from "@/modules/wallet/queries/fetch-wallet";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import useCartStore from "@/store/cart";
 
 interface PickupInformationProps {
   thresholdInKm: number;
@@ -24,16 +25,16 @@ interface PickupInformationProps {
   storeAddress: string;
   userAddress: string;
 }
+
 const PickupInformation = ({
-  thresholdInKm,
-  distanceToVendor,
   userId,
   storeId,
   storeAddress,
   userAddress,
 }: PickupInformationProps) => {
-  const { storeTotals, cartTotal, typedCartData, setIsOpen } =
+  const { storeTotals, typedCartData, openStoreId, setIsOpen } =
     useCartViewStore();
+  const { clearCart } = useCartStore();
 
   const { mutateAsync: createOrder, isPending: isOrderCreationPending } =
     useCreateOrder();
@@ -46,10 +47,35 @@ const PickupInformation = ({
   const [paymentMethod, setPaymentMethod] =
     useState<OrderPaymentMethod>("paystack");
 
-  const serviceFee = 0.1 * cartTotal;
-  const totalOrderCost = serviceFee + cartTotal;
+  const activeStore =
+    storeTotals.find((store) => store.storeId === openStoreId) ??
+    storeTotals.find((store) => store.storeId === storeId);
+  const orderProducts = activeStore?.products ?? [];
+  const itemCount = activeStore?.totalQuantity ?? 0;
+  const subTotal = activeStore?.totalAmount ?? 0;
+
+  const serviceFee = 0.1 * subTotal;
+  const totalOrderCost = serviceFee + subTotal;
   const walletBalance = Number(wallet?.balance ?? 0);
   const canPayWithWallet = walletBalance >= totalOrderCost;
+
+  const handleClearOrder = async () => {
+    if (typedCartData?.id) {
+      try {
+        await updateCart({
+          cartId: typedCartData.id,
+          userId,
+          cartItems: [],
+          totalPrice: 0,
+        });
+      } catch (error) {
+        console.error("Failed to clear cart:", error);
+      }
+    } else {
+      clearCart();
+    }
+    setIsOpen(false);
+  };
 
   const handlePlaceOrder = async () => {
     if (paymentMethod === "wallet" && !canPayWithWallet) {
@@ -64,23 +90,21 @@ const PickupInformation = ({
     const orderData = {
       userId,
       storeId,
-      serviceFee: serviceFee,
+      serviceFee,
       deliveryFee: 0,
-      subTotal: cartTotal,
+      subTotal,
       totalPrice: totalOrderCost,
       status: "pending",
       vendorAddress: storeAddress,
-      customerAddress: userAddress,
+      customerAddress: userAddress || storeAddress,
     };
 
-    const orderItems = storeTotals.flatMap((store) =>
-      store.products.map((product) => ({
-        storeId: store.storeId,
-        orderId: "",
-        productId: product.id,
-        quantity: product.quantity,
-      }))
-    );
+    const orderItems = orderProducts.map((product) => ({
+      storeId: activeStore?.storeId ?? storeId,
+      orderId: "",
+      productId: product.id,
+      quantity: product.quantity,
+    }));
 
     try {
       await createOrder({ orderData, orderItems, paymentMethod });
@@ -88,7 +112,7 @@ const PickupInformation = ({
       if (typedCartData?.id) {
         await updateCart({
           cartId: typedCartData.id,
-          userId: userId,
+          userId,
           cartItems: [],
           totalPrice: 0,
         });
@@ -119,67 +143,30 @@ const PickupInformation = ({
   };
 
   return (
-    <div className="py-5">
+    <div className="flex flex-col gap-1 py-5">
       <div className="border-b border-gray-200 py-3">
-        <span className="flex flex-row gap-2 items-center h-20 bg-gray-200 rounded-md p-2">
+        <span className="flex h-20 flex-row items-center gap-2 rounded-md bg-gray-200 p-2">
           <CircleAlert size={18} />
-          <p className="text-gray-600 text-sm flex-grow">
-            You&apos;ve selected the pickup option; you will have to pick up
-            your meal at the restaurant
+          <p className="flex-grow text-sm text-gray-600">
+            You&apos;ve selected pickup — collect your meal at the restaurant.
           </p>
         </span>
       </div>
 
       <div className="border-b border-gray-200 py-3">
-        <span className="flex flex-row gap-4 items-center justify-center h-20 bg-pink-200 rounded-md">
-          <p className="text-pink-800 font-semibold">Spin the wheel</p>
-        </span>
-      </div>
-      <div className="border-b border-gray-200 py-3">
-        <span className="flex flex-row gap-4 items-center h-10">
-          <Banknote size={17} className="text-pink-500" />
-          <p>Use Promo Code</p>
-        </span>
-      </div>
-      <div className="border-b border-gray-200 py-2">
-        <span className="flex flex-row justify-between items-center h-10">
-          <p>
-            Sub-total ({storeTotals.length}{" "}
-            {storeTotals.length === 1 ? "item" : "items"})
-          </p>
-          <p>₦{formatNumberWithCommas(Number(cartTotal.toFixed(2)))}</p>
-        </span>
-        {/* <span className="flex flex-row justify-between items-center h-10">
-          <p>Delivery Fee</p>
-          <p>₦{formatNumberWithCommas(Number(deliveryFee.toFixed(2)))}</p>
-        </span> */}
-        {distanceToVendor > thresholdInKm && (
-          <div className="border-b border-gray-200 py-3">
-            <span className="flex flex-row gap-4 items-center h-20 bg-red-200 rounded-md p-2">
-              <Bike className="w-1/4 text-red-700" />
-              <p className="text-red-700 text-sm flex-grow">
-                {`The vendor is ${distanceToVendor} away, consider ordering from a nearby vendor
-                        to get lower delivery fees`}
-              </p>
-            </span>
-          </div>
-        )}
-        <span className="flex flex-row justify-between items-center h-10">
-          <span className="flex flex-row gap-2 items-center">
-            <p> Service Fee</p>
-            <CircleAlert size={17} className="text-yellow-500" />
+        <span className="flex h-auto min-h-10 flex-row items-start gap-4">
+          <MapPin size={17} className="mt-0.5 shrink-0 text-gray-500" />
+          <span className="flex flex-col">
+            <p className="text-ash">
+              {storeAddress?.trim() || "Store address unavailable"}
+            </p>
+            <p className="text-xs text-gray-500">Pickup Address</p>
           </span>
-          <p>₦{formatNumberWithCommas(Number(serviceFee.toFixed(2)))}</p>
-        </span>
-        <span className="flex flex-row justify-between items-center h-10 font-semibold">
-          <p>Total</p>
-          <p>₦{formatNumberWithCommas(Number(totalOrderCost.toFixed(2)))}</p>
         </span>
       </div>
+
       <div className="border-b border-gray-200 py-2">
-        <span className="flex flex-row gap-4 items-center h-10">
-          <p className="font-medium">Payment Method</p>
-        </span>
+        <p className="font-medium text-ash">Payment Method</p>
       </div>
       <RadioGroup
         value={paymentMethod}
@@ -189,14 +176,14 @@ const PickupInformation = ({
         className="mb-2"
       >
         <div className="border-b border-gray-200 py-2">
-          <span className="flex flex-row items-center justify-between h-10">
+          <span className="flex h-10 flex-row items-center justify-between">
             <span className="flex flex-row items-center gap-3">
               <Wallet size={17} className="text-ash/60" />
               <div>
                 <Label
                   htmlFor="pickup-pay-wallet"
                   className={cn(
-                    "font-normal text-base",
+                    "text-base font-normal",
                     canPayWithWallet ? "text-black" : "text-ash/40"
                   )}
                 >
@@ -228,12 +215,12 @@ const PickupInformation = ({
           </span>
         </div>
         <div className="border-b border-gray-200 py-2">
-          <span className="flex flex-row items-center justify-between h-10">
+          <span className="flex h-10 flex-row items-center justify-between">
             <span className="flex flex-row items-center gap-3">
               <Banknote size={17} className="text-ash/60" />
               <Label
                 htmlFor="pickup-pay-paystack"
-                className="font-normal text-base text-black"
+                className="text-base font-normal text-black"
               >
                 Pay with Paystack
               </Label>
@@ -246,24 +233,55 @@ const PickupInformation = ({
           </span>
         </div>
       </RadioGroup>
-      <div className="mt-4 flex flex-col gap-4">
-        <Button asChild onClick={handlePlaceOrder}>
-          <span className="flex items-center justify-center rounded-md border border-transparent bg-orange-400 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-orange-600 cursor-pointer">
-            {isOrderCreationPending || isCartUpdatePending ? (
-              <>
-                Creating Order
-                <span className="ml-2 text-sm">
-                  <FaSpinner className="animate-spin" />
-                </span>
-              </>
-            ) : paymentMethod === "wallet" ? (
-              <>Pay with wallet</>
-            ) : (
-              <>Place Order</>
-            )}
+
+      <div className="border-b border-gray-200 py-2">
+        <p className="font-medium text-ash">Payment Summary</p>
+      </div>
+      <div className="border-b border-gray-200 py-2">
+        <span className="flex h-10 flex-row items-center justify-between">
+          <p>
+            Sub-total ({itemCount} {itemCount === 1 ? "item" : "items"})
+          </p>
+          <p>₦{formatNumberWithCommas(Number(subTotal.toFixed(2)))}</p>
+        </span>
+        <span className="flex h-10 flex-row items-center justify-between">
+          <span className="flex flex-row items-center gap-2">
+            <p>Service Fee</p>
+            <CircleAlert size={17} className="text-yellow-500" />
           </span>
+          <p>₦{formatNumberWithCommas(Number(serviceFee.toFixed(2)))}</p>
+        </span>
+        <span className="flex h-10 flex-row items-center justify-between font-semibold">
+          <p>Total</p>
+          <p>₦{formatNumberWithCommas(Number(totalOrderCost.toFixed(2)))}</p>
+        </span>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-4">
+        <Button
+          type="button"
+          className="w-full rounded-md bg-orange-400 text-white hover:bg-orange-600"
+          onClick={() => void handlePlaceOrder()}
+          disabled={isOrderCreationPending || isCartUpdatePending}
+        >
+          {isOrderCreationPending || isCartUpdatePending ? (
+            <>
+              Creating Order
+              <FaSpinner className="ml-2 animate-spin" />
+            </>
+          ) : paymentMethod === "wallet" ? (
+            "Pay with wallet"
+          ) : (
+            "Place Order"
+          )}
         </Button>
-        <Button className="w-full bg-red-100 px-6 py-3 text-red-500 text-sm hover:bg-red-200">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full border-destructive/30 bg-red-50 text-red-500 hover:bg-red-100"
+          onClick={() => void handleClearOrder()}
+          disabled={isCartUpdatePending}
+        >
           Clear Order
         </Button>
       </div>

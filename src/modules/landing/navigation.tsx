@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [

@@ -5,21 +5,13 @@ import { FaSpinner } from "react-icons/fa6";
 
 import { Button } from "@/components/ui/button";
 import { useVerifyWalletTopup } from "@/modules/wallet/queries/verify-wallet-topup";
-import useAuthStore from "@/store/auth";
 
 export function TopupCallbackPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isLoggedIn } = useAuthStore();
   const { reference } = useSearch({ from: "/shop/wallet/topup/callback" });
 
   const { data, isLoading, isError, error } = useVerifyWalletTopup(reference);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      void navigate({ to: "/auth" });
-    }
-  }, [isLoggedIn, navigate]);
 
   useEffect(() => {
     if (data?.settled || data?.success) {

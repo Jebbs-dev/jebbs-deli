@@ -8,7 +8,7 @@ import {
   Clock,
   Search,
   Star,
-} from "lucide-react";
+} from "@/components/icons";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +23,10 @@ import { formatNumberWithCommas } from "@/utils/formatNumber";
 import { useFetchVendorStoreById } from "@/modules/shop/queries/fetch-vendor-store-by-id";
 import { Product } from "@/types/types";
 import { useAddProductToCart } from "@/modules/shop/hooks/use-add-product-to-cart";
-import { isStoreOpenNow } from "@/modules/shop/lib/store-hours";
+import {
+  formatStoreTime,
+  isStoreOpenNow,
+} from "@/modules/shop/lib/store-hours";
 import { cn } from "@/lib/utils";
 
 function productMatchesTag(product: Product, tag: string) {
@@ -277,8 +280,8 @@ export function StorePage() {
                         Hours
                       </p>
                       <p className="mt-1">
-                        {vendorStoreData.openingTime ?? "—"} –{" "}
-                        {vendorStoreData.closingTime ?? "—"}
+                        {formatStoreTime(vendorStoreData.openingTime)} –{" "}
+                        {formatStoreTime(vendorStoreData.closingTime)}
                       </p>
                     </div>
                   )}
@@ -338,7 +341,7 @@ export function StorePage() {
               <span className="text-[10px] font-bold uppercase tracking-[2px] text-ogbono">
                 Open
                 {vendorStoreData?.closingTime
-                  ? ` until ${vendorStoreData.closingTime}`
+                  ? ` until ${formatStoreTime(vendorStoreData.closingTime)}`
                   : ""}
               </span>
             ) : (
@@ -353,7 +356,7 @@ export function StorePage() {
                       aria-hidden
                     />
                     <span className="text-[10px] font-bold uppercase leading-[100%] tracking-[2px] text-black">
-                      Opens {vendorStoreData.openingTime}
+                      Opens {formatStoreTime(vendorStoreData.openingTime)}
                     </span>
                   </>
                 ) : null}

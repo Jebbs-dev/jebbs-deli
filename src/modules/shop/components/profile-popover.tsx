@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Copy, FileClock, Headset, LogOut, Wallet } from "lucide-react";
+import { Copy, FileClock, Headset, LogOut, Wallet } from "@/components/icons";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";

@@ -145,7 +145,7 @@ export function WalletPage() {
               max={MAX_TOPUP}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="h-11 rounded-lg border-black/10"
+              className="h-11 rounded-lg border-black/10 bg-white text-ash placeholder:text-ash/50"
             />
             <Button
               type="button"

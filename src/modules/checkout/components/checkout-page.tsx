@@ -1,29 +1,6 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Cart, Product } from "@/types/types";
-import { Image } from "@unpic/react";
-import useCartStore, { CartItemProps } from "@/store/cart";
-import CartItem from "@/modules/shop/cart/components/cart-item";
-import { formatNumberWithCommas } from "@/utils/formatNumber";
-import useAuthStore from "@/store/auth";
-import { useState } from "react";
-import {
-  useUpdateCart,
-  useRemoveFromCart,
-} from "@/modules/shop/cart/mutations/update-cart";
-import { useAddToCart } from "@/modules/shop/cart/mutations/add-to-cart";
-import { useAuthFormModal } from "@/store/auth-form-modal";
-import { useFetchCart } from "@/modules/shop/cart/queries/fetch-cart";
-import {
-  FetchedCartData,
-  StoreTotal,
-} from "@/modules/shop/cart/components/cart-sheet";
-import { ArrowDown, ArrowLeft, ChevronRight, Store } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { SheetHeader } from "@/components/ui/sheet";
+import { ArrowLeft } from "@/components/icons";
+import { cn } from "@/lib/utils";
 import CheckoutOrderPage from "./checkout-order-page";
 import PaymentPage from "./payment-page";
 import { useCartViewStore } from "@/store/cart-data";
@@ -33,48 +10,56 @@ interface ChekoutProps {
 }
 
 const CheckoutPage = ({ goToCart }: ChekoutProps) => {
-    const {
-      toggleCheckoutView,
-      setToggleCheckoutView
-    } = useCartViewStore();
-
+  const { toggleCheckoutView, setToggleCheckoutView } = useCartViewStore();
 
   return (
-    <>
-      <SheetHeader>
+    <div className="flex h-full flex-col text-ash">
+      <SheetHeader className="text-left text-ash">
         <div className="flex flex-row items-center">
-          <span className="mr-1">
-            <ArrowLeft onClick={goToCart} size={17} />
-          </span>
-          <span>
-            <h3 className="text-2xl">Checkout</h3>
-          </span>
+          <button
+            type="button"
+            className="mr-1 cursor-pointer text-ash hover:text-scotch"
+            onClick={() => {
+              if (toggleCheckoutView === "payment") {
+                setToggleCheckoutView("order");
+              } else {
+                goToCart();
+              }
+            }}
+            aria-label="Go back"
+          >
+            <ArrowLeft size={17} />
+          </button>
+          <h3 className="text-2xl font-semibold text-ash">Checkout</h3>
         </div>
 
         <div className="flex flex-row gap-3 pt-2">
-          <span
-            className="w-1/2 flex flex-col gap-2"
-            onClick={() => {
-              setToggleCheckoutView("order");
-            }}
+          <button
+            type="button"
+            className="flex w-1/2 cursor-pointer flex-col gap-2 text-left text-ash"
+            onClick={() => setToggleCheckoutView("order")}
           >
-            <p>Your order</p>
-            <div className={`w-full rounded-lg h-2.5 bg-primary`}></div>
-          </span>
+            <p className="text-ash">Your order</p>
+            <div className="h-2.5 w-full rounded-lg bg-scotch" />
+          </button>
 
-          <span
-            className="w-1/2 flex flex-col gap-2"
-            onClick={() => {
-              setToggleCheckoutView("payment");
-            }}
-          >
-            Delivery & Payment
+          <div className="flex w-1/2 flex-col gap-2">
+            <p
+              className={cn(
+                toggleCheckoutView === "payment"
+                  ? "text-ash"
+                  : "text-ash/40"
+              )}
+            >
+              Delivery & Payment
+            </p>
             <div
-              className={`w-full rounded-lg h-2.5 ${
-                toggleCheckoutView === "payment" ? "bg-primary" : "bg-gray-100"
-              }`}
-            ></div>
-          </span>
+              className={cn(
+                "h-2.5 w-full rounded-lg",
+                toggleCheckoutView === "payment" ? "bg-scotch" : "bg-black/10"
+              )}
+            />
+          </div>
         </div>
       </SheetHeader>
       {toggleCheckoutView === "order" ? (
@@ -82,15 +67,11 @@ const CheckoutPage = ({ goToCart }: ChekoutProps) => {
           proceedToPayment={() => {
             setToggleCheckoutView("payment");
           }}
-          // storeTotals={storeTotals}
-          // typedCartData={typedCartData}
-          // openStoreId={openStoreId}
-          // setIsOpen={setIsOpen}
         />
       ) : (
         <PaymentPage />
       )}
-    </>
+    </div>
   );
 };
 

@@ -1,24 +1,12 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Cart, Product } from "@/types/types";
-import useCartStore, { CartItemProps } from "@/store/cart";
+import useCartStore from "@/store/cart";
 import CartItem from "@/modules/shop/cart/components/cart-item";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import useAuthStore from "@/store/auth";
-
-import {
-  FetchedCartData,
-  StoreTotal,
-} from "@/modules/shop/cart/components/cart-sheet";
-import { ArrowDown, ArrowLeft, ChevronRight, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartViewStore } from "@/store/cart-data";
+import { useEffect } from "react";
 
 interface CheckoutOrderProps {
   proceedToPayment: () => void;
@@ -27,112 +15,124 @@ interface CheckoutOrderProps {
 const CheckoutOrderPage = ({ proceedToPayment }: CheckoutOrderProps) => {
   const { addItem, removeItem } = useCartStore();
 
-  const { storeTotals, typedCartData, openStoreId, setIsOpen } =
-    useCartViewStore();
+  const {
+    storeTotals,
+    typedCartData,
+    openStoreId,
+    setOpenStoreId,
+    setIsOpen,
+  } = useCartViewStore();
 
-  const { isLoggedIn, user } = useAuthStore();
+  const { isLoggedIn } = useAuthStore();
+
+  const resolvedStoreId =
+    openStoreId && storeTotals.some((store) => store.storeId === openStoreId)
+      ? openStoreId
+      : (storeTotals[0]?.storeId ?? null);
+
+  useEffect(() => {
+    if (resolvedStoreId && resolvedStoreId !== openStoreId) {
+      setOpenStoreId(resolvedStoreId);
+    }
+  }, [resolvedStoreId, openStoreId, setOpenStoreId]);
+
+  const activeStores = storeTotals.filter(
+    (store) => store.storeId === resolvedStoreId
+  );
+  const activeStore = activeStores[0];
+  const itemCount = activeStore?.totalQuantity ?? 0;
+  const subtotal = activeStore?.totalAmount ?? 0;
 
   return (
-    <>
-      <div className="mb-3 bg-gray-100 py-4 mt-3">
-        <p>Order Summary</p>
+    <div className="flex h-full flex-col text-ash">
+      <div className="mb-3 mt-3 rounded-lg bg-[#f5f5f5] px-3 py-4">
+        <p className="font-medium text-ash">Order Summary</p>
       </div>
-      <div className="flex flex-col h-[80%] justify-between mt-3">
-        <div className="overflow-auto h-[85%]">
-          {storeTotals
-            .filter((store) => openStoreId === store.storeId)
-            .map((store) => (
-              <div key={store.storeId} className="mb-6">
-                <div className="flex flex-col items-start gap-2 mb-2 p-2">
-                  <div className="flex flex-row justify-between w-full">
-                    <span className="flex flex-row justify-center items-center gap-4">
-                      <span>
-                        <Image
-                          src={String(store.billboard)}
-                          alt="billboard"
-                          width={100}
-                          height={100}
-                          className="w-10 h-10 object-cover rounded-full"
-                        />
-                      </span>
-                      <span className=" text-orange-700 flex flex-col ">
-                        <p className="font-medium">{store.vendorStoreName}</p>
-
-                        <p className="text-sm text-orange-600 border-orange-200">
-                          {store.totalQuantity}{" "}
-                          {store.totalQuantity === 1 ? "item" : "items"}
-                        </p>
-                      </span>
+      <div className="mt-3 flex min-h-0 flex-1 flex-col justify-between">
+        <div className="min-h-0 flex-1 overflow-auto">
+          {activeStores.map((store) => (
+            <div key={store.storeId} className="mb-6">
+              <div className="mb-2 flex flex-col items-start gap-2 p-2">
+                <div className="flex w-full flex-row items-center justify-between">
+                  <span className="flex flex-row items-center gap-4">
+                    <Image
+                      src={String(store.billboard)}
+                      alt="billboard"
+                      width={100}
+                      height={100}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                    <span className="flex flex-col text-ash">
+                      <p className="font-medium">{store.vendorStoreName}</p>
+                      <p className="text-sm text-ash/60">
+                        {store.totalQuantity}{" "}
+                        {store.totalQuantity === 1 ? "item" : "items"}
+                      </p>
                     </span>
-
-                    <p className="flex flex-row items-center text-sm text-orange-600 cursor-pointer">
-                      Show selection
-                      <ArrowDown className="ml-2" size={18} />{" "}
-                    </p>
-                  </div>
-                </div>
-                {openStoreId === store.storeId && (
-                  <ul className="divide-y divide-gray-200 transition">
-                    {store.products.map((item) => (
-                      <CartItem
-                        key={item.id}
-                        items={{
-                          ...item,
-                          onRemove: () => removeItem(item.id),
-                          onAdd: () => addItem(item),
-                          cartId: isLoggedIn ? typedCartData?.id : undefined,
-                        }}
-                      />
-                    ))}
-                  </ul>
-                )}
-                <div>
-                  <div className="flex flex-1 items-end justify-between text-sm">
-                    {/* <Button asChild> */}
-                    <Link
-                      to="/shop/$storeId"
-                      params={{ storeId: String(store.storeId) }}
-                      className="flex items-center gap-2 bg-primary text-white rounded-full px-4 py-2"
-                      onClick={() => {
-                        setIsOpen(false);
-                      }}
-                    >
-                      <p className="mr-2">+</p>
-                      <p>Add Another Pack</p>
-                    </Link>
-                    {/* </Button> */}
-                  </div>
+                  </span>
                 </div>
               </div>
-            ))}
-
-          <div className="border-t py-5 flex flex-row justify-between items-center text-orange-700/70">
-            <span className="flex flex-row gap-2 text-orange-700/70">
-              <Store />
-              <p>Leave a message for the restuarant</p>
-            </span>
-            <span>
-              <ChevronRight />
-            </span>
-          </div>
+              <ul className="divide-y divide-black/10 transition">
+                {store.products.map((item) => (
+                  <CartItem
+                    key={item.id}
+                    tone="light"
+                    items={{
+                      ...item,
+                      onRemove: () => removeItem(item.id),
+                      onAdd: () => addItem(item),
+                      cartId: isLoggedIn ? typedCartData?.id : undefined,
+                    }}
+                  />
+                ))}
+              </ul>
+              <div className="mt-4">
+                <Link
+                  to="/shop/$storeId"
+                  params={{ storeId: String(store.storeId) }}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-ash/15 bg-white px-4 py-2 text-sm font-medium text-ash transition-colors hover:bg-ash/5"
+                  onClick={() => {
+                    setIsOpen(false);
+                  }}
+                >
+                  <span>+</span>
+                  <span>Add Another Pack</span>
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="bottom-0 w-full border-t h-auto pt-5 pb-3">
-          <p className="mt-0.5 mb-2 text-xs text-gray-500 text-center">
+        <div className="w-full border-t border-black/10 pb-3 pt-5">
+          <div className="mb-3 space-y-2 text-sm text-ash">
+            <div className="flex justify-between">
+              <span>
+                Subtotal ({itemCount} {itemCount === 1 ? "item" : "items"})
+              </span>
+              <span className="font-medium">
+                ₦{formatNumberWithCommas(Number(subtotal.toFixed(2)))}
+              </span>
+            </div>
+            <p className="text-xs text-ash/55">
+              Delivery and service fees are calculated on the next step.
+            </p>
+          </div>
+          <p className="mb-2 mt-0.5 text-center text-xs text-ash/50">
             By proceeding, you agree to our{" "}
             <span className="underline">Terms of Use</span> and{" "}
             <span className="underline">Privacy Policy</span>
           </p>
           <Button
-            className="w-full shadow-sm hover:bg-orange-600"
+            className="w-full rounded-lg bg-scotch text-ash shadow-sm hover:brightness-110"
             size="lg"
             onClick={proceedToPayment}
+            disabled={!activeStore}
           >
             Make Payment
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

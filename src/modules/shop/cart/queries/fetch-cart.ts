@@ -13,5 +13,6 @@ export const useFetchCart = (userId: string) => {
           return response.data;
         }
       : skipToken,
+    staleTime: 30_000,
   });
 };

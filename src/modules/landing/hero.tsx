@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { Check, MapPin } from "lucide-react";
+import { Check, MapPin } from "@/components/icons";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 
 const EASE = [0.25, 1, 0.5, 1] as const;

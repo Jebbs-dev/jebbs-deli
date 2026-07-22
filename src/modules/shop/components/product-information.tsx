@@ -11,7 +11,7 @@ import { Product } from "@/types/types";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, Clock } from "@/components/icons";
 
 interface ProductInformationProps {
   isOpen: boolean;

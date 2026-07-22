@@ -1,4 +1,4 @@
-import { Bike, MapPinned, Store } from "lucide-react";
+import { Bike, MapPinned, Store } from "@/components/icons";
 import { motion, useReducedMotion } from "motion/react";
 import { PILLARS } from "@/modules/landing/data/menu";
 

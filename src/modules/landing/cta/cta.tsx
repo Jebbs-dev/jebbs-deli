@@ -3,7 +3,7 @@
 import { Link } from "@tanstack/react-router";
 import { Image } from "@unpic/react";
 import { widgets } from "./data/widgets";
-import { ArrowDown, ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight } from "@/components/icons";
 import {
   Card,
   CardContent,

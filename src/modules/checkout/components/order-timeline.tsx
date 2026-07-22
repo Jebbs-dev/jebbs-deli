@@ -1,55 +1,145 @@
-import React from 'react';
+import dayjs from "dayjs";
+import { cn } from "@/lib/utils";
 
-const steps = [
+const ORDER_STEPS = [
   {
-    title: 'Order Received',
-    description: 'Waiting for vendor to confirm your order.',
-    time: '10:44am',
+    key: "pending",
+    title: "Order Received",
+    description: "Waiting for the vendor to confirm your order.",
   },
   {
-    title: 'Preparing Your Order',
-    description: 'Your order will be ready in 35 minutes',
-    time: '10:44am',
+    key: "confirmed",
+    title: "Order Confirmed",
+    description: "The vendor has confirmed your order.",
   },
   {
-    title: 'Order Ready',
-    description: 'Your order is ready for pickup.',
-    time: '11:06am',
+    key: "preparing",
+    title: "Preparing Your Order",
+    description: "Your meal is being prepared.",
   },
   {
-    title: 'Rider Accepted Order',
-    description: 'Your order has been assigned to a rider.',
-    time: '11:10am',
+    key: "ready",
+    title: "Order Ready",
+    description: "Your order is ready for pickup or the rider.",
   },
   {
-    title: 'Rider At The Vendor',
-    description: 'Rider is waiting to pick up your order',
-    time: '11:18am',
+    key: "picked_up",
+    title: "On The Way",
+    description: "Your order is on its way.",
   },
   {
-    title: 'Rider Picked Up Order',
-    description: 'Your order is on its way.',
-    time: '11:20am',
+    key: "delivered",
+    title: "Delivered",
+    description: "Your order has been delivered. Enjoy!",
   },
-];
+] as const;
 
-const OrderTimeline = () => {
+const STATUS_ALIASES: Record<string, string> = {
+  pending: "pending",
+  received: "pending",
+  confirmed: "confirmed",
+  accepted: "confirmed",
+  preparing: "preparing",
+  preparing_order: "preparing",
+  ready: "ready",
+  ready_for_pickup: "ready",
+  picked_up: "picked_up",
+  pickedup: "picked_up",
+  in_transit: "picked_up",
+  on_the_way: "picked_up",
+  delivered: "delivered",
+  completed: "delivered",
+  cancelled: "cancelled",
+  canceled: "cancelled",
+};
+
+function normalizeStatus(status?: string | null): string {
+  if (!status) return "pending";
+  const key = status.trim().toLowerCase().replace(/\s+/g, "_");
+  return STATUS_ALIASES[key] ?? key;
+}
+
+export interface OrderTimelineProps {
+  status?: string | null;
+  createdAt?: string | null;
+  estimatedDelivery?: string | null;
+}
+
+const OrderTimeline = ({
+  status,
+  createdAt,
+  estimatedDelivery,
+}: OrderTimelineProps) => {
+  const normalized = normalizeStatus(status);
+  const isCancelled = normalized === "cancelled";
+  const currentIndex = ORDER_STEPS.findIndex((step) => step.key === normalized);
+  const activeIndex = currentIndex >= 0 ? currentIndex : 0;
+
   return (
-    <div className="max-w-md mx-auto p-4">
-      <div className="mb-4">
-        <p className="text-sm text-gray-400">Delivery Time</p>
-        <h2 className="text-2xl font-semibold">1 hour 5 mins</h2>
+    <div className="mx-auto max-w-md p-1">
+      <div className="mb-6">
+        <p className="text-sm text-ash/50">Order status</p>
+        <h2 className="text-xl font-semibold text-ash capitalize">
+          {isCancelled ? "Cancelled" : ORDER_STEPS[activeIndex]?.title}
+        </h2>
+        {estimatedDelivery ? (
+          <p className="mt-1 text-sm text-ash/60">{estimatedDelivery}</p>
+        ) : createdAt ? (
+          <p className="mt-1 text-sm text-ash/60">
+            Placed {dayjs(createdAt).format("MMMM D, YYYY h:mm a")}
+          </p>
+        ) : null}
       </div>
-      <div className="border-l-2 border-green-500 pl-4 space-y-6">
-        {steps.map((step, idx) => (
-          <div key={idx} className="relative">
-            <div className="absolute -left-[25px] top-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow" />
-            <h3 className="text-green-700 font-medium">{step.title}</h3>
-            <p className="text-sm text-gray-500">{step.description}</p>
-            <p className="text-sm text-gray-400 mt-1">{step.time}</p>
-          </div>
-        ))}
-      </div>
+
+      {isCancelled ? (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          This order was cancelled.
+        </p>
+      ) : (
+        <div className="space-y-6 border-l-2 border-green-500 pl-4">
+          {ORDER_STEPS.map((step, idx) => {
+            const isComplete = idx < activeIndex;
+            const isCurrent = idx === activeIndex;
+            const isUpcoming = idx > activeIndex;
+
+            return (
+              <div key={step.key} className="relative">
+                <div
+                  className={cn(
+                    "absolute -left-[25px] top-1 h-4 w-4 rounded-full border-2 border-white shadow",
+                    isComplete || isCurrent ? "bg-green-500" : "bg-gray-300"
+                  )}
+                />
+                <h3
+                  className={cn(
+                    "font-medium",
+                    isCurrent
+                      ? "text-green-700"
+                      : isComplete
+                        ? "text-ash"
+                        : "text-ash/40"
+                  )}
+                >
+                  {step.title}
+                </h3>
+                <p
+                  className={cn(
+                    "text-sm",
+                    isUpcoming ? "text-ash/35" : "text-ash/60"
+                  )}
+                >
+                  {step.description}
+                </p>
+                {isCurrent && createdAt && idx === 0 ? (
+                  <p className="mt-1 text-sm text-ash/45">
+                    {dayjs(createdAt).format("h:mm a")}
+                  </p>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

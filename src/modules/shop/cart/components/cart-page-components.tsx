@@ -18,10 +18,10 @@ const CartPageComponents = ({ storeId }: VendorPageProps) => {
 
   const {
     storeTotals,
-    openStoreId,
     setOpenStoreId,
     handleClearVendorItems,
     setToggleCartView,
+    setToggleCheckoutView,
     typedCartData,
   } = useCartViewStore();
 
@@ -86,8 +86,9 @@ const CartPageComponents = ({ storeId }: VendorPageProps) => {
               if (!isLoggedIn) {
                 onAuthFormOpen();
               } else {
+                setOpenStoreId(storeId);
+                setToggleCheckoutView("order");
                 setToggleCartView("checkout");
-                setOpenStoreId(openStoreId === storeId ? null : storeId);
               }
             }}
           >

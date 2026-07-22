@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "@/components/icons";
 import { motion, useReducedMotion } from "motion/react";
 import {
   CUISINES,
