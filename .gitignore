@@ -7,8 +7,8 @@
 .yarn/install-state.gz
 package-lock.json
 .env
-.pnpm-store
-.vscode
+.pnpm-store/
+.vscode/
 
 # testing
 /coverage
