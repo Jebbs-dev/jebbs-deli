@@ -324,13 +324,13 @@ export function ShopPage() {
             />
             <StoreSection
               id="handpicked-kitchens"
-              title="Handpicked for you"
+              title="Curated"
               stores={sections.handpicked}
               onViewAll={scrollToAllVendors}
             />
             <StoreSection
               id="essentials-kitchens"
-              title="Shop Essentials"
+              title="Essentials"
               stores={sections.essentials}
               onViewAll={scrollToAllVendors}
             />
