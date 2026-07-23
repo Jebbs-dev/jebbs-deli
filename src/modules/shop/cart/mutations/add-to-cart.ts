@@ -1,28 +1,27 @@
-import { Cart } from "@/types/types";
 import api from "@/utils/api";
 import { CartItemProps } from "@/store/cart";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import useAuthStore from "@/store/auth";
 
 export const useAddToCart = () => {
   const queryClient = useQueryClient();
 
-    const { toast } = useToast();
-
   return useMutation({
     mutationFn: async (data: {
-      cartItems: CartItemProps[];
+      cartItems: Array<
+        | CartItemProps
+        | { productId: string; quantity: number; storeId: string }
+      >;
       totalPrice: number;
       userId: string;
     }) => {
       const response = await api.post("/cart", data);
       return response.data;
     },
-    onSuccess: (data, variables) => {
-      const userInfoStr = localStorage.getItem("userInfo");
-      if (userInfoStr) {
-        // User is signed in, clear the cart from local storage
-        localStorage.removeItem("cart");
+    onSuccess: (_data, variables) => {
+      // Same as before: only invalidate after a signed-in sync.
+      // Local `jebbs-cart-storage` is cleared by CartSheet after a successful sync.
+      if (useAuthStore.getState().isLoggedIn) {
         queryClient.invalidateQueries({ queryKey: ["cart", variables.userId] });
       }
     },

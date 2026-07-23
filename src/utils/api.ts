@@ -1,79 +1,45 @@
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+} from "axios";
 import useAuthStore from "@/store/auth";
 
-type RefreshResult = {
-  accessToken: string;
-  refreshToken: string;
-};
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-type StoredUserInfo = {
-  accessToken?: string;
-  refreshToken?: string;
-  [key: string]: unknown;
-};
+const api: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+  withCredentials: true,
+});
 
-const getUserInfo = (): StoredUserInfo | null => {
-  try {
-    const userInfoStr = localStorage.getItem("userInfo");
-    return userInfoStr ? JSON.parse(userInfoStr) : null;
-  } catch (error) {
-    console.error("Error parsing userInfo:", error);
-    return null;
-  }
-};
+let refreshPromise: Promise<void> | null = null;
 
-const saveAccessToken = (accessToken: string) => {
-  const userInfo = getUserInfo();
-  if (!userInfo) return;
-
-  localStorage.setItem(
-    "userInfo",
-    JSON.stringify({ ...userInfo, accessToken })
-  );
-};
-
+/**
+ * Same behaviour as before: only redirect when a logged-in session's refresh fails.
+ * Guests never hit this path.
+ */
 const handleRefreshUnauthorized = () => {
   useAuthStore.getState().logout();
-  window.location.href = "/auth";
-};
-
-// Helper function to check if token is about to expire
-const isTokenExpiringSoon = (token: string, thresholdMinutes = 30): boolean => {
-  try {
-    const decoded: { exp?: number } = jwtDecode(token);
-    if (!decoded.exp) return false;
-
-    const expirationTime = decoded.exp * 1000;
-    const timeUntilExpiration = expirationTime - Date.now();
-    const thresholdMs = thresholdMinutes * 60 * 1000;
-
-    return timeUntilExpiration <= thresholdMs;
-  } catch (error) {
-    console.error("Error decoding token:", error);
-    return false;
+  if (typeof window !== "undefined") {
+    window.location.href = "/auth";
   }
 };
 
-let refreshPromise: Promise<RefreshResult> | null = null;
-
-const refreshAccessToken = async (): Promise<string> => {
-  const userInfo = getUserInfo();
-
-  if (!userInfo?.refreshToken) {
-    throw new Error("No refresh token available");
+const refreshAccessToken = async (): Promise<void> => {
+  // Mirror old localStorage gate: only refresh when the user appears logged in.
+  if (!useAuthStore.getState().isLoggedIn) {
+    throw new Error("No refresh session available");
   }
 
   if (!refreshPromise) {
     refreshPromise = axios
-      .post<RefreshResult>(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
-        { refreshToken: userInfo.refreshToken }
-      )
-      .then((response) => {
-        saveAccessToken(response.data.accessToken);
-        return response.data;
-      })
+      .post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true })
+      .then(() => undefined)
       .catch((error) => {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           handleRefreshUnauthorized();
@@ -85,42 +51,14 @@ const refreshAccessToken = async (): Promise<string> => {
       });
   }
 
-  const { accessToken } = await refreshPromise;
-  return accessToken;
+  await refreshPromise;
 };
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-  withCredentials: true,
-});
-
 api.interceptors.request.use(
-  async (config) => {
-    const userInfo = getUserInfo();
-
-    if (userInfo?.accessToken) {
-      if (isTokenExpiringSoon(userInfo.accessToken, 30)) {
-        try {
-          const newToken = await refreshAccessToken();
-          config.headers.Authorization = `Bearer ${newToken}`;
-        } catch (error) {
-          console.error("Proactive token refresh failed:", error);
-          config.headers.Authorization = `Bearer ${userInfo.accessToken}`;
-        }
-      } else {
-        config.headers.Authorization = `Bearer ${userInfo.accessToken}`;
-      }
-    }
-
+  (config: InternalAxiosRequestConfig) => {
     if (config.data instanceof FormData) {
-      config.headers["Content-Type"] = "multipart/form-data";
+      delete config.headers["Content-Type"];
     }
-
     return config;
   },
   (error) => Promise.reject(error)
@@ -128,15 +66,21 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      useAuthStore.getState().isLoggedIn
+    ) {
       originalRequest._retry = true;
 
       try {
-        const newAccessToken = await refreshAccessToken();
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        await refreshAccessToken();
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
@@ -151,19 +95,23 @@ api.interceptors.response.use(
 export default api;
 
 /**
- * Sets up a periodic token refresh check to keep the session alive
+ * Periodic refresh for logged-in sessions (cookies, not localStorage tokens).
+ * Does not redirect on failure — that matches not nuking browse/cart mid-session.
  */
 export const setupSilentRefresh = () => {
   const checkAndRefreshToken = async () => {
     try {
-      const userInfo = getUserInfo();
-      if (!userInfo?.accessToken) return;
-
-      if (isTokenExpiringSoon(userInfo.accessToken, 120)) {
-        await refreshAccessToken();
-      }
+      if (!useAuthStore.getState().isLoggedIn) return;
+      await axios.post(
+        `${API_BASE_URL}/auth/refresh`,
+        {},
+        { withCredentials: true }
+      );
     } catch (error) {
       console.error("Silent token refresh failed:", error);
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        useAuthStore.getState().logout();
+      }
     }
   };
 

@@ -15,6 +15,7 @@ import useAuthStore from "@/store/auth";
 import { useCartViewStore } from "@/store/cart-data";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import { useFetchUserInformation } from "@/modules/user/queries/fetch-user-information";
+import { logout as logoutRequest } from "@/modules/auth/mutations/logout";
 
 function inviteCodeFromUserId(userId: string) {
   const compact = userId.replace(/-/g, "").slice(0, 6).toUpperCase();
@@ -25,7 +26,7 @@ export function ProfilePopover() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isLoggedIn, logout } = useAuthStore();
+  const { user, isLoggedIn } = useAuthStore();
   const { onAuthFormOpen } = useAuthFormModal();
   const { setIsOrderHistoryOpen, setIsOpen: setCartSheetOpen } =
     useCartViewStore();
@@ -204,8 +205,8 @@ export function ProfilePopover() {
               <button
                 type="button"
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-ash hover:bg-black/5"
-                onClick={() => {
-                  logout();
+                onClick={async () => {
+                  await logoutRequest();
                   setCartSheetOpen(false);
                   setOpen(false);
                   void navigate({ to: "/shop" });

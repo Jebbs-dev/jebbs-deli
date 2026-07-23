@@ -15,6 +15,7 @@ import { useFetchUserInformation } from "@/modules/user/queries/fetch-user-infor
 import useAuthStore from "@/store/auth";
 import useCartStore from "@/store/cart";
 import { useCartViewStore } from "@/store/cart-data";
+import { useAuthFormModal } from "@/store/auth-form-modal";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 
 type CartPopoverProps = {
@@ -26,6 +27,7 @@ export function CartPopover({ cartCount }: CartPopoverProps) {
   const [view, setView] = useState<"list" | "detail">("list");
 
   const { isLoggedIn, user } = useAuthStore();
+  const { onAuthFormOpen } = useAuthFormModal();
   const { items, addItem, removeItem } = useCartStore();
   const { data: fetchedCartData } = useFetchCart(
     user?.id ? String(user.id) : ""
@@ -68,6 +70,12 @@ export function CartPopover({ cartCount }: CartPopoverProps) {
   };
 
   const goToCheckout = () => {
+    if (!isLoggedIn) {
+      setOpen(false);
+      onAuthFormOpen();
+      return;
+    }
+
     if (openStoreId) {
       setOpenStoreId(openStoreId);
     } else if (storeTotals[0]?.storeId) {

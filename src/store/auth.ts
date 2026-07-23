@@ -4,11 +4,11 @@ import { persist } from "zustand/middleware";
 
 interface AuthState {
   isLoggedIn: boolean;
-  user: Omit<User, 'password'> | null;
+  user: Omit<User, "password"> | null;
 }
 
 interface AuthActions {
-  login: (user: Omit<User, 'password'>) => void;
+  login: (user: Omit<User, "password">) => void;
   logout: () => void;
 }
 
@@ -20,10 +20,7 @@ export const useAuthStore = create<AuthStore>()(
       isLoggedIn: false,
       user: null,
       login: (user) => set({ isLoggedIn: true, user }),
-      logout: () => {
-        localStorage.removeItem("userInfo");
-        set({ isLoggedIn: false, user: null });
-      },
+      logout: () => set({ isLoggedIn: false, user: null }),
     }),
     {
       name: "jebbs-auth-storage",

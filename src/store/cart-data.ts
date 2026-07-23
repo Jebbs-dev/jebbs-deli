@@ -82,7 +82,10 @@ export const useCartViewStore = create<CartViewState>((set, get) => ({
         })
       ) ?? [];
 
-    const cartItemsToUse = isLoggedIn ? fetchedCartItems : localItems;
+    // Keep guest/local items visible until a server cart snapshot is available.
+    // Switching to an empty fetch on login made the cart look cleared.
+    const cartItemsToUse =
+      isLoggedIn && typedCartData != null ? fetchedCartItems : localItems;
 
     const groupedByVendorStore = cartItemsToUse.reduce<
       Record<string, CartItemProps[]>
