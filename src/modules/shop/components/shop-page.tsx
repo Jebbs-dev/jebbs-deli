@@ -155,7 +155,7 @@ export function ShopPage() {
   const debouncedQuery = useDebounce(querykey, 400);
 
   const { data, isLoading } = useFetchStores({
-    search: debouncedQuery || undefined,
+    q: debouncedQuery || undefined,
     limit: 50,
   });
 

@@ -1,4 +1,3 @@
-import { Order } from "@/types/types";
 import api from "@/utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrderData } from "@/store/order";
@@ -6,12 +5,12 @@ import { useInitialisePayment } from "./initiate-payment";
 import useAuthStore from "@/store/auth";
 
 export type OrderPaymentMethod = "wallet" | "paystack";
+export type FulfillmentType = "delivery" | "pickup";
 
 interface OrderItemProps {
-  storeId: string;
-  orderId: string;
   productId: string;
   quantity: number;
+  storeId?: string;
 }
 
 export const useCreateOrder = () => {
@@ -23,44 +22,48 @@ export const useCreateOrder = () => {
 
   return useMutation({
     mutationFn: async (data: {
-      orderData: Omit<Order, "id">;
+      storeId: string;
+      fulfillmentType: FulfillmentType;
+      vendorAddress: string;
+      customerAddress: string;
       orderItems: OrderItemProps[];
       paymentMethod?: OrderPaymentMethod;
     }) => {
       const paymentMethod = data.paymentMethod ?? "paystack";
-      const response = await api.post("/orders", {
-        orderData: {
-          ...data.orderData,
-          paymentMethod,
-        },
-        orderItems: data.orderItems,
+      const response = await api.post("/v1/orders", {
+        storeId: data.storeId,
+        fulfillmentType: data.fulfillmentType,
+        vendorAddress: data.vendorAddress,
+        customerAddress: data.customerAddress,
+        orderItems: data.orderItems.map(({ productId, quantity, storeId }) => ({
+          productId,
+          quantity,
+          storeId,
+        })),
         paymentMethod,
       });
       return { ...response.data, paymentMethod };
     },
     onSuccess: (data) => {
       setOrderData(data);
+      void queryClient.invalidateQueries({ queryKey: ["orders"] });
 
       if (data.paymentMethod === "wallet") {
         void queryClient.invalidateQueries({ queryKey: ["wallet"] });
         return;
       }
 
-      setTimeout(() => {
-        void initialisePayment({
-          paymentData: {
-            email: String(user?.email),
-            amount: String(data.order.totalPrice * 100),
-          },
-          callback_url:
-            typeof window !== "undefined"
-              ? `${window.location.origin}/shop`
-              : "http://localhost:3000/shop",
-          userId: String(user?.id),
-          orderId: String(data?.order.id),
-          storeId: data?.order.storeId,
-        });
-      }, 500);
+      const orderId = String(data.id);
+      const origin =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : "http://localhost:3000";
+
+      void initialisePayment({
+        orderId,
+        email: String(user?.email ?? ""),
+        callback_url: `${origin}/shop/orders/payment/callback`,
+      });
     },
     onError: (error) => {
       console.error("Failed to create order", error);

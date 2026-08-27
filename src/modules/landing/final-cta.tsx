@@ -6,20 +6,17 @@ export function FinalCta() {
 
   return (
     <section
-      className="relative overflow-hidden px-5 py-24 md:px-8 md:py-32"
+      className="relative overflow-hidden bg-[#7a200c] px-5 py-24 md:px-8 md:py-32"
       aria-labelledby="final-cta-heading"
     >
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          /* Deepened from scotch 0.82: cream text on raw scotch is 3.46:1.
-             The darker pepper-brown wash keeps the heat and passes AA. */
-          backgroundImage:
-            "linear-gradient(rgba(122,32,12,0.88), rgba(21,19,15,0.93)), url('/images/landing/bg-grill.jpg')",
-        }}
-        aria-hidden="true"
-      />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(244,238,226,0.12),transparent_50%)]" />
+      <div className="absolute inset-0" aria-hidden="true">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-[0.22]"
+          style={{ backgroundImage: "url('/images/landing/bg-grill.jpg')" }}
+        />
+        <div className="absolute inset-0 bg-linear-to-b from-[#7a200c]/30 to-ash" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(244,238,226,0.12),rgba(244,238,226,0)_50%)]" />
+      </div>
 
       <motion.div
         className="relative mx-auto max-w-[720px] text-center"

@@ -10,6 +10,7 @@ import appCss from "./globals.css?url";
 import PathnameProvider from "@/providers/pathname-provider";
 import { QueryProvider } from "@/providers/query-client-provider";
 import TokenRefreshProvider from "@/providers/token-refresh-provider";
+import AuthHydrateProvider from "@/providers/auth-hydrate-provider";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -78,9 +79,11 @@ function RootLayout() {
       <body className="bg-ash text-cream font-sans antialiased">
         <QueryProvider>
           <PathnameProvider>
-            <TokenRefreshProvider>
-              <Outlet />
-            </TokenRefreshProvider>
+            <AuthHydrateProvider>
+              <TokenRefreshProvider>
+                <Outlet />
+              </TokenRefreshProvider>
+            </AuthHydrateProvider>
           </PathnameProvider>
         </QueryProvider>
         <Scripts />

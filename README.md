@@ -19,8 +19,8 @@ Jebbs Deli is a modern food delivery platform built with TanStack Start. It prov
 - **Type Safety**: TypeScript
 
 ## Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
+- Node.js 22 or higher
+- pnpm
 - Google Maps API key
 
 ## Local Development Setup
@@ -33,26 +33,22 @@ Jebbs Deli is a modern food delivery platform built with TanStack Start. It prov
 
 2. **Install dependencies**
    ```bash
-   npm install
-   # or
-   yarn install
+   pnpm install
    ```
 
 3. **Environment Variables Setup**
-   Create a `.env.local` file in the root directory with the following variables:
+   Create a `.env` file in the root directory with the following variables:
    ```
-   # API Configuration
-   VITE_API_BASE_URL=http://localhost:3000 || https://your-production-domain.com
-   
+   # API Configuration (matches the Nest API global prefix)
+   VITE_API_BASE_URL=http://localhost:8080/api
+
    # Google Maps Configuration
-   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+   VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
    ```
 
 4. **Run the development server**
    ```bash
-   npm run dev
-   # or
-   yarn dev
+   pnpm dev
    ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser

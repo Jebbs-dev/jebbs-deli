@@ -18,7 +18,9 @@ import { Route as ShopIndexRouteImport } from './app/shop/index'
 import { Route as ShopStoreIdRouteImport } from './app/shop/$storeId'
 import { Route as ShopWalletRouteRouteImport } from './app/shop/wallet/route'
 import { Route as ShopWalletIndexRouteImport } from './app/shop/wallet/index'
+import { Route as ShopOrdersOrderIdRouteImport } from './app/shop/orders/$orderId'
 import { Route as ShopWalletTopupCallbackRouteImport } from './app/shop/wallet/topup/callback'
+import { Route as ShopOrdersPaymentCallbackRouteImport } from './app/shop/orders/payment/callback'
 
 const VendorsRoute = VendorsRouteImport.update({
   id: '/vendors',
@@ -65,11 +67,22 @@ const ShopWalletIndexRoute = ShopWalletIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ShopWalletRouteRoute,
 } as any)
+const ShopOrdersOrderIdRoute = ShopOrdersOrderIdRouteImport.update({
+  id: '/orders/$orderId',
+  path: '/orders/$orderId',
+  getParentRoute: () => ShopRouteRoute,
+} as any)
 const ShopWalletTopupCallbackRoute = ShopWalletTopupCallbackRouteImport.update({
   id: '/topup/callback',
   path: '/topup/callback',
   getParentRoute: () => ShopWalletRouteRoute,
 } as any)
+const ShopOrdersPaymentCallbackRoute =
+  ShopOrdersPaymentCallbackRouteImport.update({
+    id: '/orders/payment/callback',
+    path: '/orders/payment/callback',
+    getParentRoute: () => ShopRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,7 +93,9 @@ export interface FileRoutesByFullPath {
   '/shop/wallet': typeof ShopWalletRouteRouteWithChildren
   '/shop/$storeId': typeof ShopStoreIdRoute
   '/shop/': typeof ShopIndexRoute
+  '/shop/orders/$orderId': typeof ShopOrdersOrderIdRoute
   '/shop/wallet/': typeof ShopWalletIndexRoute
+  '/shop/orders/payment/callback': typeof ShopOrdersPaymentCallbackRoute
   '/shop/wallet/topup/callback': typeof ShopWalletTopupCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -90,7 +105,9 @@ export interface FileRoutesByTo {
   '/vendors': typeof VendorsRoute
   '/shop/$storeId': typeof ShopStoreIdRoute
   '/shop': typeof ShopIndexRoute
+  '/shop/orders/$orderId': typeof ShopOrdersOrderIdRoute
   '/shop/wallet': typeof ShopWalletIndexRoute
+  '/shop/orders/payment/callback': typeof ShopOrdersPaymentCallbackRoute
   '/shop/wallet/topup/callback': typeof ShopWalletTopupCallbackRoute
 }
 export interface FileRoutesById {
@@ -103,7 +120,9 @@ export interface FileRoutesById {
   '/shop/wallet': typeof ShopWalletRouteRouteWithChildren
   '/shop/$storeId': typeof ShopStoreIdRoute
   '/shop/': typeof ShopIndexRoute
+  '/shop/orders/$orderId': typeof ShopOrdersOrderIdRoute
   '/shop/wallet/': typeof ShopWalletIndexRoute
+  '/shop/orders/payment/callback': typeof ShopOrdersPaymentCallbackRoute
   '/shop/wallet/topup/callback': typeof ShopWalletTopupCallbackRoute
 }
 export interface FileRouteTypes {
@@ -117,7 +136,9 @@ export interface FileRouteTypes {
     | '/shop/wallet'
     | '/shop/$storeId'
     | '/shop/'
+    | '/shop/orders/$orderId'
     | '/shop/wallet/'
+    | '/shop/orders/payment/callback'
     | '/shop/wallet/topup/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,7 +148,9 @@ export interface FileRouteTypes {
     | '/vendors'
     | '/shop/$storeId'
     | '/shop'
+    | '/shop/orders/$orderId'
     | '/shop/wallet'
+    | '/shop/orders/payment/callback'
     | '/shop/wallet/topup/callback'
   id:
     | '__root__'
@@ -139,7 +162,9 @@ export interface FileRouteTypes {
     | '/shop/wallet'
     | '/shop/$storeId'
     | '/shop/'
+    | '/shop/orders/$orderId'
     | '/shop/wallet/'
+    | '/shop/orders/payment/callback'
     | '/shop/wallet/topup/callback'
   fileRoutesById: FileRoutesById
 }
@@ -216,12 +241,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopWalletIndexRouteImport
       parentRoute: typeof ShopWalletRouteRoute
     }
+    '/shop/orders/$orderId': {
+      id: '/shop/orders/$orderId'
+      path: '/orders/$orderId'
+      fullPath: '/shop/orders/$orderId'
+      preLoaderRoute: typeof ShopOrdersOrderIdRouteImport
+      parentRoute: typeof ShopRouteRoute
+    }
     '/shop/wallet/topup/callback': {
       id: '/shop/wallet/topup/callback'
       path: '/topup/callback'
       fullPath: '/shop/wallet/topup/callback'
       preLoaderRoute: typeof ShopWalletTopupCallbackRouteImport
       parentRoute: typeof ShopWalletRouteRoute
+    }
+    '/shop/orders/payment/callback': {
+      id: '/shop/orders/payment/callback'
+      path: '/orders/payment/callback'
+      fullPath: '/shop/orders/payment/callback'
+      preLoaderRoute: typeof ShopOrdersPaymentCallbackRouteImport
+      parentRoute: typeof ShopRouteRoute
     }
   }
 }
@@ -244,12 +283,16 @@ interface ShopRouteRouteChildren {
   ShopWalletRouteRoute: typeof ShopWalletRouteRouteWithChildren
   ShopStoreIdRoute: typeof ShopStoreIdRoute
   ShopIndexRoute: typeof ShopIndexRoute
+  ShopOrdersOrderIdRoute: typeof ShopOrdersOrderIdRoute
+  ShopOrdersPaymentCallbackRoute: typeof ShopOrdersPaymentCallbackRoute
 }
 
 const ShopRouteRouteChildren: ShopRouteRouteChildren = {
   ShopWalletRouteRoute: ShopWalletRouteRouteWithChildren,
   ShopStoreIdRoute: ShopStoreIdRoute,
   ShopIndexRoute: ShopIndexRoute,
+  ShopOrdersOrderIdRoute: ShopOrdersOrderIdRoute,
+  ShopOrdersPaymentCallbackRoute: ShopOrdersPaymentCallbackRoute,
 }
 
 const ShopRouteRouteWithChildren = ShopRouteRoute._addFileChildren(

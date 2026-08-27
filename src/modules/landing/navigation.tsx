@@ -63,10 +63,10 @@ const Navigation = () => {
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 w-full transition-[background-color,border-color,backdrop-filter] duration-300",
+        "sticky top-0 z-40 w-full transition-[background-color,border-color] duration-300",
         scrolled || !isHome
-          ? "border-b border-iroko bg-ash/95 backdrop-blur-sm"
-          : "border-b border-transparent bg-gradient-to-b from-ash/70 to-transparent",
+          ? "border-b border-iroko bg-ash"
+          : "border-b-0 bg-transparent",
       )}
     >
       <div className="mx-auto flex h-16 max-w-[1280px] items-center gap-6 px-5 md:h-20 md:gap-10 md:px-8">

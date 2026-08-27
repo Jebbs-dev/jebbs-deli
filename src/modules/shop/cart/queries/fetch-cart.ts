@@ -9,7 +9,7 @@ export const useFetchCart = (userId: string) => {
     queryKey: ["cart", user?.id],
     queryFn: isLoggedIn
       ? async () => {
-          const response = await api.get(`/cart/${userId}`);
+          const response = await api.get(`/v1/cart`);
           return response.data;
         }
       : skipToken,

@@ -36,14 +36,14 @@ export const useUpdateCart = () => {
       });
 
       if (data.cartId) {
-        const response = await api.put(`/cart/${data.cartId}`, {
+        const response = await api.put(`/v1/cart/${data.cartId}`, {
           cartData: { totalPrice: data.totalPrice },
           cartItems: formattedCartItems,
         });
         return response.data;
       }
 
-      const response = await api.post("/cart", {
+      const response = await api.post("/v1/cart", {
         userId: data.userId,
         totalPrice: data.totalPrice,
         cartItems: formattedCartItems,

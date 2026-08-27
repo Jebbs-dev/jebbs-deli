@@ -15,7 +15,7 @@ export const useAddToCart = () => {
       totalPrice: number;
       userId: string;
     }) => {
-      const response = await api.post("/cart", data);
+      const response = await api.post("/v1/cart", data);
       return response.data;
     },
     onSuccess: (_data, variables) => {

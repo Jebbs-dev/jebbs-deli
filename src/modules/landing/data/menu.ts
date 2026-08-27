@@ -123,18 +123,24 @@ export const WHY_DELI = [
     id: "first-order",
     title: "First order in minutes",
     body: "Pick a kitchen, place your order, eat. No paperwork maze between you and the plate.",
+    image: "/images/landing/cuisine-fastfood.jpg",
+    alt: "Stacked burgers on a board — a first order ready in minutes",
     ticket: null,
   },
   {
     id: "kitchens",
     title: "Kitchens worth the wait",
     body: "Jollof to continental plates from kitchens we stand behind — meals that earn the ETA.",
+    image: "/images/landing/cuisine-african.jpg",
+    alt: "Jollof rice with chicken and plantains from a kitchen we stand behind",
     ticket: null,
   },
   {
     id: "ticket",
     title: "Status like a kitchen ticket",
     body: "Accepted. Preparing. On the way. At your door — live progress, not a refresh-and-hope loop.",
+    image: "/images/landing/menu-suya.jpg",
+    alt: "Suya skewers on the grill — track the plate from kitchen to door",
     ticket: {
       order: "#0417",
       dish: "JOLLOF + SUYA",
@@ -147,6 +153,8 @@ export const WHY_DELI = [
     id: "support",
     title: "Help when something stalls",
     body: "Midnight craving or a stuck ETA — real support around the clock, not a silent ticket queue.",
+    image: "/images/landing/menu-dessert.jpg",
+    alt: "Chocolate cake for a late-night craving when support still picks up",
     ticket: null,
   },
 ] as const;

@@ -11,6 +11,7 @@ import { useFetchOrders } from "../queries/fetch-order-by-userId";
 import dayjs from "dayjs";
 import OrderTimeline from "./order-timeline";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
+import { Link } from "@tanstack/react-router";
 
 type OrderItem = {
   id: string;
@@ -20,20 +21,27 @@ type OrderItem = {
 type OrderRecord = {
   id: string;
   status?: string;
+  fulfillmentType?: string;
   createdAt?: string;
-  totalPrice?: number;
+  totalPrice?: number | string;
   orderItems?: OrderItem[];
+  payments?: Array<{ status?: string }>;
+  statusEvents?: Array<{ status: string; at: string; note?: string | null }>;
+  assignment?: {
+    rider?: { name?: string | null; telephone?: string | null };
+  } | null;
+  store?: { name?: string };
 };
 
 const OrderHistory = () => {
   const { isOrderHistoryOpen, setIsOrderHistoryOpen } = useCartViewStore();
   const { user } = useAuthStore();
   const { data: orderData, isLoading: isOrderLoading } = useFetchOrders(
-    String(user?.id)
+    String(user?.id),
   );
   const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(null);
 
-  const orders: OrderRecord[] = orderData?.orders ?? [];
+  const orders: OrderRecord[] = orderData?.items ?? [];
 
   return (
     <>
@@ -58,8 +66,10 @@ const OrderHistory = () => {
             ) : (
               orders.map((data) => {
                 const storeName =
+                  data.store?.name ??
                   data.orderItems?.find((item) => item.store?.name)?.store
-                    ?.name ?? "Order";
+                    ?.name ??
+                  "Order";
                 const shortId = data.id?.slice(0, 8) ?? "—";
 
                 return (
@@ -76,44 +86,47 @@ const OrderHistory = () => {
                           {dayjs(data.createdAt).format("MMMM D, YYYY h:mm a")}
                         </p>
                       ) : null}
-                      {typeof data.totalPrice === "number" ? (
+                      {data.totalPrice != null ? (
                         <p className="text-sm text-ash/60">
                           ₦
                           {formatNumberWithCommas(
-                            Number(data.totalPrice.toFixed(2))
+                            Number(data.totalPrice),
                           )}
                         </p>
                       ) : null}
+                      <p className="text-xs capitalize text-ash/45">
+                        {data.fulfillmentType ?? "delivery"} · {data.status}
+                      </p>
                     </div>
-                    <div className="flex flex-col items-end">
-                      <p className="text-sm text-ash">Order #{shortId}</p>
-                      <p className="text-sm text-green-600">View Timeline</p>
-                    </div>
+                    <div className="ml-auto text-xs text-ash/40">#{shortId}</div>
                   </button>
                 );
               })
             )}
           </div>
-        </SheetContent>
-      </Sheet>
 
-      <Sheet
-        open={Boolean(selectedOrder)}
-        onOpenChange={(open) => {
-          if (!open) setSelectedOrder(null);
-        }}
-      >
-        <SheetContent side="right" className="w-full bg-white sm:max-w-[500px]">
-          <SheetHeader className="mb-4">
-            <SheetTitle className="border-b pb-1 text-ash">
-              Order #{selectedOrder?.id?.slice(0, 8) ?? "—"}
-            </SheetTitle>
-          </SheetHeader>
           {selectedOrder ? (
-            <OrderTimeline
-              status={selectedOrder.status}
-              createdAt={selectedOrder.createdAt}
-            />
+            <div className="mt-8 border-t pt-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-medium text-ash">Tracking</p>
+                <Link
+                  to="/shop/orders/$orderId"
+                  params={{ orderId: selectedOrder.id }}
+                  className="text-sm text-scotch underline"
+                  onClick={() => setIsOrderHistoryOpen(false)}
+                >
+                  Open details
+                </Link>
+              </div>
+              <OrderTimeline
+                status={selectedOrder.status}
+                fulfillmentType={selectedOrder.fulfillmentType}
+                createdAt={selectedOrder.createdAt}
+                statusEvents={selectedOrder.statusEvents}
+                paymentStatus={selectedOrder.payments?.[0]?.status}
+                rider={selectedOrder.assignment?.rider}
+              />
+            </div>
           ) : null}
         </SheetContent>
       </Sheet>

@@ -16,6 +16,7 @@ type StoresResponse = {
 };
 
 type StoreParams = {
+  q?: string;
   search?: string;
   limit?: number;
   [key: string]: string | number | boolean | undefined;
@@ -25,7 +26,7 @@ export const useFetchStores = (params: StoreParams = {}) => {
   return useQuery({
     queryKey: ["stores", params],
     queryFn: async () => {
-      const response = await api.get<StoresResponse>("/store", { params });
+      const response = await api.get<StoresResponse>("/v1/stores", { params });
       const data = response.data;
       return {
         ...data,

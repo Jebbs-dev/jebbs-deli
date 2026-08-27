@@ -59,14 +59,9 @@ const AuthForm = ({ variant }: AuthFormProps) => {
     email: z.string().email({
       message: "Please enter a valid email address.",
     }),
-    password: z
-      .string()
-      .min(4, {
-        message: "Password must be at least 4 characters long.",
-      })
-      .max(10, {
-        message: "Password must be no more than 10 characters long.",
-      }),
+    password: z.string().min(6, {
+      message: "Password must be at least 6 characters long.",
+    }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({

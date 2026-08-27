@@ -21,7 +21,7 @@ export const useFetchFilteredProduct = (params: ProductParams) => {
   return useQuery({
     queryKey: ["products", params],
     queryFn: async () => {
-      const response = await api.get<ProductsResponse>("/products", { params });
+      const response = await api.get<ProductsResponse>("/v1/products", { params });
       const data = response.data;
       return {
         ...data,

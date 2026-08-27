@@ -121,7 +121,7 @@ export const useUpsertCartItem = () => {
   const mutation = useMutation({
     scope: { id: `cart-upsert-${user?.id ?? "guest"}` },
     mutationFn: async (data: AbsoluteUpsert) => {
-      const response = await api.patch("/cart/items", {
+      const response = await api.patch("/v1/cart/items", {
         productId: data.productId,
         storeId: data.storeId,
         quantity: data.quantity,

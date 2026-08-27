@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatNumberWithCommas } from "@/utils/formatNumber";
 import { useFetchVendorStoreById } from "@/modules/shop/queries/fetch-vendor-store-by-id";
+import { useFetchProductsByStore } from "@/modules/shop/queries/fetch-products-by-store";
 import { Product } from "@/types/types";
 import { useAddProductToCart } from "@/modules/shop/hooks/use-add-product-to-cart";
 import {
@@ -97,8 +98,11 @@ export function StorePage() {
   const [menuQuery, setMenuQuery] = useState("");
   const { addProductToCart, isPending } = useAddProductToCart();
 
-  const { data: vendorStoreData, isPending: isStorePending } =
+  const { data: vendorStoreData, isPending: isStoreQueryPending } =
     useFetchVendorStoreById(String(storeId));
+  const { data: productsPage, isPending: isProductsPending } =
+    useFetchProductsByStore(String(storeId));
+  const isStorePending = isStoreQueryPending || isProductsPending;
 
   const open = isStoreOpenNow(
     vendorStoreData?.openingTime,
@@ -111,14 +115,14 @@ export function StorePage() {
     );
     const fromProducts = Array.from(
       new Set(
-        (vendorStoreData?.products ?? [])
+        (productsPage?.items ?? [])
           .map((p: Product) => p.category)
           .filter(Boolean)
           .map((c: string) => c.charAt(0).toUpperCase() + c.slice(1))
       )
     );
     return raw.length > 0 ? raw : fromProducts;
-  }, [vendorStoreData?.tags, vendorStoreData?.products]);
+  }, [vendorStoreData?.tags, productsPage?.items]);
 
   useEffect(() => {
     if (selectedTag !== "All" && !tags.includes(selectedTag)) {
@@ -126,7 +130,7 @@ export function StorePage() {
     }
   }, [tags, selectedTag]);
 
-  const products: Product[] = vendorStoreData?.products ?? [];
+  const products: Product[] = productsPage?.items ?? [];
 
   const visibleProducts = useMemo(() => {
     let list = products;

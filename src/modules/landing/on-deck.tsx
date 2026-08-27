@@ -108,9 +108,9 @@ export function OnDeckSection() {
       >
         <div
           className={cn(
-            "px-5 py-16 md:px-8 md:py-20",
+            "bg-paper px-5 py-16 md:px-8 md:py-20",
             !reduceMotion &&
-              "lg:sticky lg:top-0 lg:flex lg:min-h-screen lg:flex-col lg:justify-center lg:py-6",
+              "lg:sticky lg:top-20 lg:flex lg:min-h-[calc(100vh-5rem)] lg:flex-col lg:justify-center lg:py-6",
           )}
         >
           <div className="mx-auto max-w-[1280px]">

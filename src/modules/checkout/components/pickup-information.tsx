@@ -13,6 +13,7 @@ import { useUpdateCart } from "@/modules/shop/cart/mutations/update-cart";
 import { FaSpinner } from "react-icons/fa6";
 import { useToast } from "@/hooks/use-toast";
 import { useFetchWallet } from "@/modules/wallet/queries/fetch-wallet";
+import { useOrderQuote } from "@/modules/checkout/queries/quote-order";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import useCartStore from "@/store/cart";
@@ -52,10 +53,28 @@ const PickupInformation = ({
     storeTotals.find((store) => store.storeId === storeId);
   const orderProducts = activeStore?.products ?? [];
   const itemCount = activeStore?.totalQuantity ?? 0;
-  const subTotal = activeStore?.totalAmount ?? 0;
+  const localSubTotal = activeStore?.totalAmount ?? 0;
 
-  const serviceFee = 0.1 * subTotal;
-  const totalOrderCost = serviceFee + subTotal;
+  const orderItems = orderProducts.map((product) => ({
+    productId: product.id,
+    quantity: product.quantity,
+  }));
+
+  const { data: quote, isLoading: quoteLoading, isError: quoteError } =
+    useOrderQuote({
+      storeId,
+      fulfillmentType: "pickup",
+      orderItems,
+      enabled: orderItems.length > 0,
+    });
+
+  const fallbackServiceFee = 0.1 * localSubTotal;
+  const subTotal = quote?.subTotal ?? localSubTotal;
+  const serviceFee = quote?.serviceFee ?? fallbackServiceFee;
+  const bagFee = quote?.bagFee ?? 0;
+  const surgeFee = quote?.surgeFee ?? 0;
+  const totalOrderCost =
+    quote?.totalPrice ?? serviceFee + subTotal + bagFee + surgeFee;
   const walletBalance = Number(wallet?.balance ?? 0);
   const canPayWithWallet = walletBalance >= totalOrderCost;
 
@@ -87,27 +106,19 @@ const PickupInformation = ({
       return;
     }
 
-    const orderData = {
-      userId,
-      storeId,
-      serviceFee,
-      deliveryFee: 0,
-      subTotal,
-      totalPrice: totalOrderCost,
-      status: "pending",
-      vendorAddress: storeAddress,
-      customerAddress: userAddress || storeAddress,
-    };
-
-    const orderItems = orderProducts.map((product) => ({
-      storeId: activeStore?.storeId ?? storeId,
-      orderId: "",
-      productId: product.id,
-      quantity: product.quantity,
-    }));
-
     try {
-      await createOrder({ orderData, orderItems, paymentMethod });
+      await createOrder({
+        storeId,
+        fulfillmentType: "pickup",
+        vendorAddress: storeAddress,
+        customerAddress: userAddress || storeAddress,
+        orderItems: orderProducts.map((product) => ({
+          storeId: activeStore?.storeId ?? storeId,
+          productId: product.id,
+          quantity: product.quantity,
+        })),
+        paymentMethod,
+      });
 
       if (typedCartData?.id) {
         await updateCart({
@@ -238,6 +249,17 @@ const PickupInformation = ({
         <p className="font-medium text-ash">Payment Summary</p>
       </div>
       <div className="border-b border-gray-200 py-2">
+        {quoteLoading ? (
+          <div className="flex h-10 items-center gap-2 text-sm text-ash/60">
+            <FaSpinner className="animate-spin" />
+            Calculating fees…
+          </div>
+        ) : null}
+        {quoteError ? (
+          <p className="mb-2 text-xs text-amber-600">
+            Live quote unavailable — showing estimated fees.
+          </p>
+        ) : null}
         <span className="flex h-10 flex-row items-center justify-between">
           <p>
             Sub-total ({itemCount} {itemCount === 1 ? "item" : "items"})
@@ -251,6 +273,18 @@ const PickupInformation = ({
           </span>
           <p>₦{formatNumberWithCommas(Number(serviceFee.toFixed(2)))}</p>
         </span>
+        {bagFee > 0 && (
+          <span className="flex h-10 flex-row items-center justify-between">
+            <p>Bag Fee</p>
+            <p>₦{formatNumberWithCommas(Number(bagFee.toFixed(2)))}</p>
+          </span>
+        )}
+        {surgeFee > 0 && (
+          <span className="flex h-10 flex-row items-center justify-between">
+            <p>Surge Fee</p>
+            <p>₦{formatNumberWithCommas(Number(surgeFee.toFixed(2)))}</p>
+          </span>
+        )}
         <span className="flex h-10 flex-row items-center justify-between font-semibold">
           <p>Total</p>
           <p>₦{formatNumberWithCommas(Number(totalOrderCost.toFixed(2)))}</p>
