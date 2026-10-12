@@ -9,6 +9,20 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const MUTATING_METHODS = new Set(["post", "put", "patch", "delete"]);
 
+// The API host is cross-site from the shop, so document.cookie cannot read
+// csrf_token. Auth responses return the same value and we keep it here.
+let csrfTokenMemory: string | undefined;
+
+export function rememberCsrfToken(token: unknown) {
+  if (typeof token === "string" && token.length > 0) {
+    csrfTokenMemory = token;
+  }
+}
+
+export function clearCsrfToken() {
+  csrfTokenMemory = undefined;
+}
+
 const getCookie = (name: string): string | undefined => {
   if (typeof document === "undefined") return undefined;
   const match = document.cookie
@@ -65,6 +79,7 @@ function omitEmptyParams(params: unknown): unknown {
 }
 
 const handleRefreshUnauthorized = () => {
+  clearCsrfToken();
   useAuthStore.getState().logout();
   if (typeof window !== "undefined") {
     window.location.href = "/auth";
@@ -79,7 +94,7 @@ api.interceptors.request.use(
 
     const method = config.method?.toLowerCase();
     if (method && MUTATING_METHODS.has(method)) {
-      const csrfToken = getCookie("csrf_token");
+      const csrfToken = csrfTokenMemory || getCookie("csrf_token");
       if (csrfToken) {
         config.headers["X-CSRF-Token"] = csrfToken;
       }
@@ -95,7 +110,12 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    rememberCsrfToken(
+      (response.data as { csrfToken?: unknown } | undefined)?.csrfToken
+    );
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
@@ -125,10 +145,13 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await axios.post(
+        const { data } = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true }
+        );
+        rememberCsrfToken(
+          (data as { csrfToken?: unknown } | undefined)?.csrfToken
         );
 
         processQueue(null);

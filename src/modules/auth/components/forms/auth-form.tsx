@@ -11,12 +11,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User } from "@/types/types";
 import { useLoginUser } from "../../mutations/login";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateUser } from "../../mutations/register";
-import { useAuthFormModal } from "@/store/auth-form-modal";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { FaSpinner } from "react-icons/fa6";
 
 interface AuthFormProps {
@@ -35,19 +33,12 @@ const loginDefaultValues = {
 };
 
 const AuthForm = ({ variant }: AuthFormProps) => {
-  const {
-    mutateAsync: loginUser,
-    isPending: isLoginPending,
-    isSuccess: isLoginSuccess,
-  } = useLoginUser();
-  const {
-    mutateAsync: registerUser,
-    isPending: isSignupPending,
-    isSuccess: isSignupSuccess,
-  } = useCreateUser();
+  const { mutateAsync: loginUser, isPending: isLoginPending } = useLoginUser();
+  const { mutateAsync: registerUser, isPending: isSignupPending } =
+    useCreateUser();
   const { toast } = useToast();
-  const { onAuthFormClose } = useAuthFormModal();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const formSchema = z.object({
     name: z
@@ -76,6 +67,12 @@ const AuthForm = ({ variant }: AuthFormProps) => {
   //   console.log(values);
   // }
 
+  const leaveAuthPage = () => {
+    if (pathname.startsWith("/auth")) {
+      navigate({ to: "/shop", replace: true });
+    }
+  };
+
   const login = async (values: { email: string; password: string }) => {
     try {
       await loginUser(values);
@@ -83,8 +80,7 @@ const AuthForm = ({ variant }: AuthFormProps) => {
         title: "Success",
         description: "Logged in successfully!",
       });
-      // window.location.reload()
-      // router.push("/shop")
+      leaveAuthPage();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -110,11 +106,15 @@ const AuthForm = ({ variant }: AuthFormProps) => {
         email: values.email,
         password: values.password,
       });
+      await loginUser({
+        email: values.email,
+        password: values.password,
+      });
       toast({
         title: "Success",
-        description: "User created successfully!",
+        description: "Account created. You're signed in.",
       });
-      navigate({ to: "/auth" });
+      leaveAuthPage();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -193,11 +193,6 @@ const AuthForm = ({ variant }: AuthFormProps) => {
             type="submit"
             disabled={form.formState.isSubmitting}
             className="bg-primary w-full hover:bg-orange-600 disabled:bg-gray-400"
-            onClick={() => {
-              form.formState.isSubmitted &&
-                (isLoginSuccess || isSignupSuccess) &&
-                onAuthFormClose();
-            }}
           >
             {isLoginPending || isSignupPending ? (
               <>

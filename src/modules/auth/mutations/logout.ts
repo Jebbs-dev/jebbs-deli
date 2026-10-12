@@ -1,4 +1,4 @@
-import api from "@/utils/api";
+import api, { clearCsrfToken } from "@/utils/api";
 import useAuthStore from "@/store/auth";
 
 export const logout = async () => {
@@ -7,5 +7,6 @@ export const logout = async () => {
   } catch {
     // Clear local session even if the request fails
   }
+  clearCsrfToken();
   useAuthStore.getState().logout();
 };

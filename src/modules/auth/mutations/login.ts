@@ -2,6 +2,7 @@ import { User } from "@/types/types";
 import api from "@/utils/api";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouterState } from "@tanstack/react-router";
 import useAuthStore from "@/store/auth";
 import { useAuthFormModal } from "@/store/auth-form-modal";
 import { useCartViewStore } from "@/store/cart-data";
@@ -11,6 +12,7 @@ export const useLoginUser = () => {
   const { onAuthFormClose } = useAuthFormModal();
   const { setIsOpen } = useCartViewStore();
   const queryClient = useQueryClient();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return useMutation({
     mutationFn: async (user: Omit<User, "id" | "name" | "role">) => {
@@ -18,10 +20,12 @@ export const useLoginUser = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      if (data) {
+      if (data?.user) {
         login(data.user);
         onAuthFormClose();
-        setIsOpen(true);
+        if (!pathname.startsWith("/shop/wallet")) {
+          setIsOpen(true);
+        }
         queryClient.invalidateQueries({ queryKey: ["cart", data.user?.id] });
       }
     },

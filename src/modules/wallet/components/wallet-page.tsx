@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { FaSpinner } from "react-icons/fa6";
 
@@ -59,7 +59,6 @@ function TransactionRow({ tx }: { tx: WalletTransaction }) {
 }
 
 export function WalletPage() {
-  const navigate = useNavigate();
   const { isLoggedIn } = useAuthStore();
   const { onAuthFormOpen } = useAuthFormModal();
   const { data: wallet, isLoading } = useFetchWallet();
@@ -71,9 +70,8 @@ export function WalletPage() {
   useEffect(() => {
     if (!isLoggedIn) {
       onAuthFormOpen();
-      void navigate({ to: "/auth" });
     }
-  }, [isLoggedIn, navigate, onAuthFormOpen]);
+  }, [isLoggedIn, onAuthFormOpen]);
 
   const balance = Number(wallet?.balance ?? 0);
   const recent = wallet?.recentTransactions ?? [];
@@ -99,8 +97,11 @@ export function WalletPage() {
 
   if (!isLoggedIn) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex flex-col items-center justify-center gap-4 py-16">
         <p className="text-sm text-ash/60">Sign in to view your wallet.</p>
+        <Button type="button" onClick={onAuthFormOpen}>
+          Sign in
+        </Button>
       </div>
     );
   }
